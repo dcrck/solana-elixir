@@ -33,7 +33,9 @@ defmodule Solana.MixProject do
       # public keys
       {:ed25519, "~> 1.3"},
       # base58 encoding
-      {:b58, "~> 1.0.2"}
+      {:b58, "~> 1.0.2"},
+      # validating parameters
+      {:nimble_options, "~> 0.3.0"}
     ]
   end
 end
