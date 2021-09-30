@@ -25,5 +25,7 @@ defmodule Solana.Middleware do
 
   defp response_content(%{body: body}), do: json_rpc_result(body)
 
+  defp json_rpc_result(%{"result" => %{"value" => value}}), do: value
   defp json_rpc_result(%{"result" => result}), do: result
+  defp json_rpc_result(%{"error" => error}), do: error
 end

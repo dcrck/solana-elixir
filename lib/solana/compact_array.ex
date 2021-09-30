@@ -4,8 +4,12 @@ defmodule Solana.CompactArray do
   @spec to_iolist(arr :: iolist | nil) :: iolist
   def to_iolist(nil), do: []
 
-  def to_iolist(arr) when is_list(arr) or is_binary(arr) do
+  def to_iolist(arr) when is_list(arr) do
     [encode_length(length(arr)) | arr]
+  end
+
+  def to_iolist(bin) when is_binary(bin) do
+    [encode_length(byte_size(bin)) | bin]
   end
 
   @spec encode_length(length :: non_neg_integer) :: list

@@ -1,10 +1,10 @@
 defmodule Solana.API do
+  @lamports_per_sol 1_000_000_000
+  @type request :: {String.t(), [String.t() | map]}
+
   @doc """
   Creates an API client used to interact with Solana's JSON-RPC API
   """
-
-  @type request :: {String.t(), [String.t() | map]}
-
   @spec client(keyword, keyword) :: Tesla.Client.t()
   def client(config, adapter_opts \\ []) do
     middleware = [
@@ -45,6 +45,7 @@ defmodule Solana.API do
     "https://api.#{network}.solana.com"
   end
 
+  defp url("localnet"), do: "http://127.0.0.1:8899"
   defp url(other), do: other
 
   defp retry_opts(config) do
@@ -87,15 +88,16 @@ defmodule Solana.API do
     {"getMinimumBalanceForRentExemption", [length, encode_opts(opts)]}
   end
 
-  @spec get_account_info(transaction :: Solana.Transaction.t(), opts :: keyword) :: request
-  def send_transaction(tx, opts \\ []) do
-    {"sendTransaction", [Base.encode64(tx), encode_opts(opts, %{"encoding" => "base64"})]}
+  @spec send_transaction(transaction :: Solana.Transaction.t(), opts :: keyword) :: request
+  def send_transaction(tx = %Solana.Transaction{}, opts \\ []) do
+    {:ok, tx_bin} = Solana.Transaction.to_binary(tx)
+    {"sendTransaction", [Base.encode64(tx_bin), encode_opts(opts, %{"encoding" => "base64"})]}
   end
 
   @spec request_airdrop(account :: Solana.key(), lamports :: non_neg_integer, opts :: keyword) ::
           request
-  def request_airdrop(account, lamports, opts \\ []) do
-    {"requestAirdrop", [Base58.encode(account), lamports, encode_opts(opts)]}
+  def request_airdrop(account, sol, opts \\ []) do
+    {"requestAirdrop", [Base58.encode(account), sol * @lamports_per_sol, encode_opts(opts)]}
   end
 
   @spec get_signatures_for_address(account :: Solana.key(), opts :: keyword) :: request

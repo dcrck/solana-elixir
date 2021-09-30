@@ -5,7 +5,8 @@ defmodule Solana.Transaction do
   @type t :: %__MODULE__{
           payer: Solana.key() | nil,
           blockhash: binary | nil,
-          instructions: [Solana.Instruction.t()]
+          instructions: [Solana.Instruction.t()],
+          signers: [Solana.keypair()]
         }
 
   @type encoding_err ::
@@ -18,28 +19,28 @@ defmodule Solana.Transaction do
   defstruct [
     :payer,
     :blockhash,
-    instructions: []
+    instructions: [],
+    signers: []
   ]
 
-  @spec to_binary(tx :: t, signers :: [Solana.keypair()]) ::
-          {:ok, binary()} | {:error, encoding_err()}
-  def to_binary(%__MODULE__{payer: nil}, _), do: {:error, :no_payer}
-  def to_binary(%__MODULE__{blockhash: nil}, _), do: {:error, :no_blockhash}
-  def to_binary(%__MODULE__{instructions: []}, _), do: {:error, :no_instructions}
+  @spec to_binary(tx :: t) :: {:ok, binary()} | {:error, encoding_err()}
+  def to_binary(%__MODULE__{payer: nil}), do: {:error, :no_payer}
+  def to_binary(%__MODULE__{blockhash: nil}), do: {:error, :no_blockhash}
+  def to_binary(%__MODULE__{instructions: []}), do: {:error, :no_instructions}
 
-  def to_binary(tx = %__MODULE__{instructions: ixs}, signers) do
+  def to_binary(tx = %__MODULE__{instructions: ixs, signers: signers}) do
     with nil <- Enum.find_index(ixs, &is_nil(&1.program)),
          accounts = compile_accounts(ixs, tx.payer),
          true <- signers_match?(accounts, signers) do
       message = encode_message(accounts, tx.blockhash, ixs)
 
-      signers =
+      signatures =
         signers
         |> reorder_signers(accounts)
         |> Enum.map(&sign(&1, message))
         |> CompactArray.to_iolist()
 
-      {:ok, :erlang.list_to_binary([signers, message])}
+      {:ok, :erlang.list_to_binary([signatures, message])}
     else
       idx when is_integer(idx) ->
         Logger.error("Missing program id on instruction at index #{idx}")
