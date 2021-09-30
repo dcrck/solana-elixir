@@ -1,12 +1,18 @@
 defmodule Solana do
   @moduledoc """
-  A library for interacting with the Solana JSON RPC API
+  A library for interacting with the Solana blockchain
   """
   @type key :: Ed25519.key()
   @type keypair :: {key(), key()}
 
   @spec keypair() :: keypair
   defdelegate keypair, to: Ed25519, as: :generate_key_pair
+
+  @doc """
+  Creates a client to interact with Solana's JSON RPC API.
+  """
+  @spec rpc_client(keyword) :: Tesla.Client.t()
+  def rpc_client(config), do: Solana.RPC.client(Enum.into(config, %{}))
 
   @spec pubkey(encoded :: binary) :: {:ok, key} | {:error, :invalid_input}
   def pubkey(encoded) when is_binary(encoded) do

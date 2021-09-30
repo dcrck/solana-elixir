@@ -1,4 +1,4 @@
-defmodule Solana.Middleware do
+defmodule Solana.RPC.Middleware do
   @behaviour Tesla.Middleware
 
   @success 200..299
