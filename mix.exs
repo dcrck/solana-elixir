@@ -12,18 +12,15 @@ defmodule Solana.MixProject do
     ]
   end
 
-  # Run "mix help compile.app" to learn about applications.
   def application do
     [
       extra_applications: [:logger]
     ]
   end
 
-  # specifies which paths to compile per environment
   def elixirc_paths(:test), do: ["lib", "test/support"]
   def elixirc_paths(_), do: ["lib"]
 
-  # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
       # base client
@@ -35,7 +32,9 @@ defmodule Solana.MixProject do
       # base58 encoding
       {:b58, "~> 1.0.2"},
       # validating parameters
-      {:nimble_options, "~> 0.3.0"}
+      {:nimble_options, "~> 0.3.0"},
+      # for the API rate limiter
+      {:gen_stage, "~> 1.0", optional: true}
     ]
   end
 end

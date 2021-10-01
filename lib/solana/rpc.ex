@@ -1,11 +1,37 @@
 defmodule Solana.RPC do
-  @lamports_per_sol 1_000_000_000
+  use Supervisor
+
+  def start_link(config) do
+    Supervisor.start_link(__MODULE__, config, name: __MODULE__)
+  end
+
+  def init(config) do
+    Supervisor.init(children(config), strategy: :rest_for_one)
+  end
+
+  defp children(config) do
+    [
+      Solana.RPC.Client,
+      Solana.RPC.RateLimiter,
+      {Solana.RPC.Runner, config}
+    ]
+  end
 
   @doc """
   Creates an API client used to interact with Solana's JSON-RPC API
   """
-  @spec client(map) :: Tesla.Client.t()
-  def client(config) do
+  @spec client(map | pid()) :: Tesla.Client.t() | pid()
+  def client(rpc) when is_pid(rpc) do
+    rpc
+    |> Supervisor.which_children()
+    |> Enum.find(&(elem(&1, 0) == Solana.RPC.Client))
+    |> case do
+      nil -> nil
+      child -> elem(child, 1)
+    end
+  end
+
+  def client(config = %{}) do
     middleware = [
       {Tesla.Middleware.BaseUrl, url(config)},
       Solana.RPC.Middleware,
@@ -17,37 +43,17 @@ defmodule Solana.RPC do
   end
 
   @doc """
-  Sends the provided requests to the configured Solana RPC endpoint
+  Sends the provided requests to the configured Solana RPC endpoint.
   """
-  @spec send(client :: Tesla.Client.t(), requests :: [Solana.RPC.Request.t()]) ::
-          {:ok, term} | {:error, term}
-  def send(client, requests), do: Tesla.post(client, "/", to_json_rpc(requests))
-
-  defp to_json_rpc(requests) when is_list(requests) do
-    requests
-    |> Enum.with_index()
-    |> Enum.map(&to_json_rpc/1)
+  def send(client, requests) do
+    Solana.RPC.Client.send(client, requests)
   end
-
-  defp to_json_rpc({{method, []}, id}) do
-    %{jsonrpc: "2.0", id: id, method: method}
-  end
-
-  defp to_json_rpc({{method, params}, id}) do
-    %{jsonrpc: "2.0", id: id, method: method, params: check_params(params)}
-  end
-
-  defp to_json_rpc({method, params}), do: to_json_rpc({{method, params}, 0})
-
-  defp check_params([]), do: []
-  defp check_params([map = %{} | rest]) when map_size(map) == 0, do: check_params(rest)
-  defp check_params([elem | rest]), do: [elem | check_params(rest)]
 
   defp url(%{network: network}) when network in ["devnet", "mainnet-beta", "testnet"] do
     "https://api.#{network}.solana.com"
   end
 
-  defp url(%{network: "localnet"}), do: "http://127.0.0.1:8899"
+  defp url(%{network: "localhost"}), do: "http://127.0.0.1:8899"
   defp url(%{network: other}), do: other
 
   defp retry_opts(config) do

@@ -1,6 +1,7 @@
 %{
   "b58": {:hex, :b58, "1.0.2", "d758f42d89fbe84052f18b2f310bed2a8c8c5b38dd0af86970026974cc7daeda", [:mix], [], "hexpm", "148e299e2753eae222b13f399f461a0c4910fed608b8723fca3c33d1d4f82c17"},
   "ed25519": {:hex, :ed25519, "1.3.2", "e3a2d4badf57f0799279cf09925bd761ec38df6df3696e266585626280b5c0ad", [:mix], [], "hexpm", "2290e46e0e23717adbe20632c6dd29aa71a46ca6e153ef7ba41fe1204f66f859"},
+  "gen_stage": {:hex, :gen_stage, "1.1.1", "78d83b14ca742f4c252770bcdf674d83378ca41579c387c57e2f06d70f596317", [:mix], [], "hexpm", "eb90d2d72609050a66ce42b7d4a69323a60c892a09ead0680d5d8ef16b9a034e"},
   "jason": {:hex, :jason, "1.2.2", "ba43e3f2709fd1aa1dce90aaabfd039d000469c05c56f0b8e31978e03fa39052", [:mix], [{:decimal, "~> 1.0 or ~> 2.0", [hex: :decimal, repo: "hexpm", optional: true]}], "hexpm", "18a228f5f0058ee183f29f9eae0805c6e59d61c3b006760668d8d18ff0d12179"},
   "mime": {:hex, :mime, "1.6.0", "dabde576a497cef4bbdd60aceee8160e02a6c89250d6c0b29e56c0dfb00db3d2", [:mix], [], "hexpm", "31a1a8613f8321143dde1dafc36006a17d28d02bdfecb9e95a880fa7aabd19a7"},
   "nimble_options": {:hex, :nimble_options, "0.3.7", "1e52dd7673d36138b1a5dede183b5d86dff175dc46d104a8e98e396b85b04670", [:mix], [], "hexpm", "2086907e6665c6b6579be54ef5001928df5231f355f71ed258f80a55e9f63633"},

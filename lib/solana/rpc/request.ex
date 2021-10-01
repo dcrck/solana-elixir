@@ -1,5 +1,38 @@
 defmodule Solana.RPC.Request do
   @type t :: {String.t(), [String.t() | map]}
+  @type json :: %{
+          jsonrpc: String.t(),
+          id: term,
+          method: String.t(),
+          params: list
+        }
+
+  @lamports_per_sol 1_000_000_000
+
+  @doc """
+  Encodes requests in the required format
+  """
+  @spec encode(requests :: [t]) :: [json]
+  def encode(requests) when is_list(requests) do
+    requests
+    |> Enum.with_index()
+    |> Enum.map(&to_json_rpc/1)
+  end
+
+  @spec encode(request :: t) :: json
+  def encode(request), do: to_json_rpc({request, 0})
+
+  defp to_json_rpc({{method, []}, id}) do
+    %{jsonrpc: "2.0", id: id, method: method}
+  end
+
+  defp to_json_rpc({{method, params}, id}) do
+    %{jsonrpc: "2.0", id: id, method: method, params: check_params(params)}
+  end
+
+  defp check_params([]), do: []
+  defp check_params([map = %{} | rest]) when map_size(map) == 0, do: check_params(rest)
+  defp check_params([elem | rest]), do: [elem | check_params(rest)]
 
   @doc """
   Returns all information associated with the account of the provided Pubkey.

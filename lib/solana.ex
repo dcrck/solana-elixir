@@ -9,9 +9,10 @@ defmodule Solana do
   defdelegate keypair, to: Ed25519, as: :generate_key_pair
 
   @doc """
-  Creates a client to interact with Solana's JSON RPC API.
+  Creates or retrieves a client to interact with Solana's JSON RPC API.
   """
-  @spec rpc_client(keyword) :: Tesla.Client.t()
+  @spec rpc_client(keyword | pid) :: Tesla.Client.t() | pid
+  def rpc_client(rpc) when is_pid(rpc), do: Solana.RPC.client(rpc)
   def rpc_client(config), do: Solana.RPC.client(Enum.into(config, %{}))
 
   @spec pubkey(encoded :: binary) :: {:ok, key} | {:error, :invalid_input}
