@@ -3,6 +3,7 @@ defmodule Solana do
   A library for interacting with the Solana blockchain
   """
 
+  defdelegate keypair(), to: Solana.Key, as: :pair
   defdelegate pubkey(encoded), to: Solana.Key, as: :decode
   defdelegate pubkey!(encoded), to: Solana.Key, as: :decode!
 

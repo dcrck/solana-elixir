@@ -20,8 +20,8 @@ defmodule TransactionTest do
         ]
       }
 
-      tx = %Transaction{payer: pk(payer), instructions: [ix]}
-      assert Transaction.to_binary(tx, [payer]) == {:error, :no_blockhash}
+      tx = %Transaction{payer: pk(payer), instructions: [ix], signers: [payer]}
+      assert Transaction.to_binary(tx) == {:error, :no_blockhash}
     end
 
     test "fails if there's no payer" do
@@ -36,14 +36,14 @@ defmodule TransactionTest do
       }
 
       tx = %Transaction{instructions: [ix], blockhash: blockhash}
-      assert Transaction.to_binary(tx, []) == {:error, :no_payer}
+      assert Transaction.to_binary(tx) == {:error, :no_payer}
     end
 
     test "fails if there's no instructions" do
       payer = Solana.keypair()
       blockhash = Solana.keypair() |> pk()
       tx = %Transaction{payer: pk(payer), blockhash: blockhash}
-      assert Transaction.to_binary(tx, []) == {:error, :no_instructions}
+      assert Transaction.to_binary(tx) == {:error, :no_instructions}
     end
 
     test "fails if an instruction doesn't have a program" do
@@ -56,11 +56,14 @@ defmodule TransactionTest do
         ]
       }
 
-      tx = %Transaction{payer: pk(payer), instructions: [ix], blockhash: blockhash}
+      tx = %Transaction{
+        payer: pk(payer),
+        instructions: [ix],
+        blockhash: blockhash,
+        signers: [payer]
+      }
 
-      assert capture_log(fn ->
-               Transaction.to_binary(tx, [payer])
-             end) =~ "index 0"
+      assert capture_log(fn -> Transaction.to_binary(tx) end) =~ "index 0"
     end
 
     test "fails if a signer is missing or if there's unnecessary signers" do
@@ -77,8 +80,10 @@ defmodule TransactionTest do
       }
 
       tx = %Transaction{payer: pk(payer), instructions: [ix], blockhash: blockhash}
-      assert Transaction.to_binary(tx, []) == {:error, :mismatched_signers}
-      assert Transaction.to_binary(tx, [payer, signer]) == {:error, :mismatched_signers}
+      assert Transaction.to_binary(tx) == {:error, :mismatched_signers}
+
+      assert Transaction.to_binary(%{tx | signers: [payer, signer]}) ==
+               {:error, :mismatched_signers}
     end
 
     test "places accounts in order (payer first)" do
@@ -97,8 +102,14 @@ defmodule TransactionTest do
         ]
       }
 
-      tx = %Transaction{payer: pk(payer), instructions: [ix], blockhash: blockhash}
-      {:ok, tx_bin} = Transaction.to_binary(tx, [payer, signer, read_only])
+      tx = %Transaction{
+        payer: pk(payer),
+        instructions: [ix],
+        blockhash: blockhash,
+        signers: [payer, signer, read_only]
+      }
+
+      {:ok, tx_bin} = Transaction.to_binary(tx)
       message = deserialize_tx(tx_bin)
 
       assert [pk(payer), pk(signer), pk(read_only)] ==
@@ -119,8 +130,14 @@ defmodule TransactionTest do
         accounts: [%Account{key: pk(payer)}, %Account{key: pk(read_only)}]
       }
 
-      tx = %Transaction{payer: pk(payer), instructions: [ix], blockhash: blockhash}
-      {:ok, tx_bin} = Transaction.to_binary(tx, [payer])
+      tx = %Transaction{
+        payer: pk(payer),
+        instructions: [ix],
+        blockhash: blockhash,
+        signers: [payer]
+      }
+
+      {:ok, tx_bin} = Transaction.to_binary(tx)
       message = deserialize_tx(tx_bin)
 
       [actual_payer | _] = Map.get(message, :accounts)
@@ -148,8 +165,14 @@ defmodule TransactionTest do
         ]
       }
 
-      tx = %Transaction{payer: pk(payer), instructions: [ix], blockhash: blockhash}
-      {:ok, tx_bin} = Transaction.to_binary(tx, [payer, signer])
+      tx = %Transaction{
+        payer: pk(payer),
+        instructions: [ix],
+        blockhash: blockhash,
+        signers: [payer, signer]
+      }
+
+      {:ok, tx_bin} = Transaction.to_binary(tx)
       message = deserialize_tx(tx_bin)
 
       # 2 signers, one read-only signer, 2 read-only non-signers (read_only and
@@ -174,10 +197,11 @@ defmodule TransactionTest do
       tx = %Transaction{
         payer: pk(from),
         instructions: [ix, ix],
-        blockhash: blockhash
+        blockhash: blockhash,
+        signers: [from]
       }
 
-      {:ok, tx_bin} = Transaction.to_binary(tx, [from])
+      {:ok, tx_bin} = Transaction.to_binary(tx)
       message = deserialize_tx(tx_bin)
 
       assert [_] = message.signatures
