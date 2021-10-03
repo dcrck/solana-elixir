@@ -40,7 +40,7 @@ defmodule Solana.RPC.Request do
   """
   @spec get_account_info(account :: Solana.key(), opts :: keyword) :: t
   def get_account_info(account, opts \\ []) do
-    {"getAccountInfo", [Base58.encode(account), encode_opts(opts)]}
+    {"getAccountInfo", [B58.encode58(account), encode_opts(opts)]}
   end
 
   @doc """
@@ -49,7 +49,7 @@ defmodule Solana.RPC.Request do
   """
   @spec get_balance(account :: Solana.key(), opts :: keyword) :: t
   def get_balance(account, opts \\ []) do
-    {"getBalance", [Base58.encode(account), encode_opts(opts)]}
+    {"getBalance", [B58.encode58(account), encode_opts(opts)]}
   end
 
   @doc """
@@ -96,7 +96,7 @@ defmodule Solana.RPC.Request do
   """
   @spec request_airdrop(account :: Solana.key(), lamports :: pos_integer, opts :: keyword) :: t
   def request_airdrop(account, sol, opts \\ []) do
-    {"requestAirdrop", [Base58.encode(account), sol * @lamports_per_sol, encode_opts(opts)]}
+    {"requestAirdrop", [B58.encode58(account), sol * @lamports_per_sol, encode_opts(opts)]}
   end
 
   @doc """
@@ -106,7 +106,7 @@ defmodule Solana.RPC.Request do
   """
   @spec get_signatures_for_address(account :: Solana.key(), opts :: keyword) :: t
   def get_signatures_for_address(account, opts \\ []) do
-    {"getSignaturesForAddress", [Base58.encode(account), encode_opts(opts)]}
+    {"getSignaturesForAddress", [B58.encode58(account), encode_opts(opts)]}
   end
 
   @doc """
@@ -115,7 +115,7 @@ defmodule Solana.RPC.Request do
   """
   @spec get_transaction(signature :: Solana.key(), opts :: keyword) :: t
   def get_transaction(signature, opts \\ []) do
-    {"getTransaction", [Base58.encode(signature), encode_opts(opts)]}
+    {"getTransaction", [B58.encode58(signature), encode_opts(opts)]}
   end
 
   @doc """
@@ -124,7 +124,7 @@ defmodule Solana.RPC.Request do
   """
   @spec get_token_supply(mint :: Solana.key(), opts :: keyword) :: t
   def get_token_supply(mint, opts \\ []) do
-    {"getTokenSupply", [Base58.encode(mint), encode_opts(opts)]}
+    {"getTokenSupply", [B58.encode58(mint), encode_opts(opts)]}
   end
 
   @doc """
@@ -133,7 +133,7 @@ defmodule Solana.RPC.Request do
   """
   @spec get_token_largest_accounts(mint :: Solana.key(), opts :: keyword) :: t
   def get_token_largest_accounts(mint, opts \\ []) do
-    {"getTokenLargestAccounts", [Base58.encode(mint), encode_opts(opts)]}
+    {"getTokenLargestAccounts", [B58.encode58(mint), encode_opts(opts)]}
   end
 
   defp encode_opts(opts, defaults \\ %{}) do

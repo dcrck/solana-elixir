@@ -27,10 +27,10 @@ defmodule Solana.MixProject do
       {:tesla, "~> 1.4.0"},
       # json library
       {:jason, ">= 1.0.0"},
-      # public keys
+      # keys and signatures
       {:ed25519, "~> 1.3"},
       # base58 encoding
-      {:b58, "~> 1.0.2"},
+      {:basefiftyeight, "~> 0.1.0"},
       # validating parameters
       {:nimble_options, "~> 0.3.0"},
       # for the API rate limiter
