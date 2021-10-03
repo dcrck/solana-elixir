@@ -1,4 +1,4 @@
-defmodule CompactArrayTest do
+defmodule Solana.CompactArrayTest do
   use ExUnit.Case
 
   alias Solana.CompactArray, as: C

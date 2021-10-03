@@ -1,4 +1,4 @@
-defmodule TransactionTest do
+defmodule Solana.TransactionTest do
   use ExUnit.Case, async: true
 
   import Solana.TestHelpers
