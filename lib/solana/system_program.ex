@@ -16,22 +16,22 @@ defmodule Solana.SystemProgram do
         doc: "Amount of space in bytes to allocate to the created account"
       ],
       from: [
-        type: {:custom, Solana, :check_pubkey, []},
+        type: {:custom, Solana.Key, :check, []},
         required: true,
         doc: "The account that will transfer lamports to the created account"
       ],
       new: [
-        type: {:custom, Solana, :check_pubkey, []},
+        type: {:custom, Solana.Key, :check, []},
         required: true,
         doc: "Public key of the created account"
       ],
       program_id: [
-        type: {:custom, Solana, :check_pubkey, []},
+        type: {:custom, Solana.Key, :check, []},
         required: true,
         doc: "Public key of the program which will own the created account"
       ],
       base: [
-        type: {:custom, Solana, :check_pubkey, []},
+        type: {:custom, Solana.Key, :check, []},
         doc: "Base public key to use to derive the created account's address"
       ],
       seed: [
@@ -62,17 +62,17 @@ defmodule Solana.SystemProgram do
         doc: "Amount of lamports to transfer"
       ],
       from: [
-        type: {:custom, Solana, :check_pubkey, []},
+        type: {:custom, Solana.Key, :check, []},
         required: true,
         doc: "Account that will transfer lamports"
       ],
       to: [
-        type: {:custom, Solana, :check_pubkey, []},
+        type: {:custom, Solana.Key, :check, []},
         required: true,
         doc: "Account that will receive the transferred lamports"
       ],
       base: [
-        type: {:custom, Solana, :check_pubkey, []},
+        type: {:custom, Solana.Key, :check, []},
         doc: "Base public key to use to derive the funding account address"
       ],
       seed: [
@@ -80,7 +80,7 @@ defmodule Solana.SystemProgram do
         doc: "Seed to use to derive the funding account address"
       ],
       program_id: [
-        type: {:custom, Solana, :check_pubkey, []},
+        type: {:custom, Solana.Key, :check, []},
         doc: "Program ID to use to derive the funding account address"
       ]
     ]
@@ -101,17 +101,17 @@ defmodule Solana.SystemProgram do
   def assign(params) do
     schema = [
       key: [
-        type: {:custom, Solana, :check_pubkey, []},
+        type: {:custom, Solana.Key, :check, []},
         required: true,
         doc: "Public key for the account which will receive a new owner"
       ],
       program_id: [
-        type: {:custom, Solana, :check_pubkey, []},
+        type: {:custom, Solana.Key, :check, []},
         required: true,
         doc: "Program ID to assign as the owner"
       ],
       base: [
-        type: {:custom, Solana, :check_pubkey, []},
+        type: {:custom, Solana.Key, :check, []},
         doc: "Base public key to use to derive the assigned account address"
       ],
       seed: [
@@ -137,7 +137,7 @@ defmodule Solana.SystemProgram do
   def allocate(params) do
     schema = [
       key: [
-        type: {:custom, Solana, :check_pubkey, []},
+        type: {:custom, Solana.Key, :check, []},
         required: true,
         doc: "Public key for the account to allocate"
       ],
@@ -147,11 +147,11 @@ defmodule Solana.SystemProgram do
         doc: "Amount of space in bytes to allocate"
       ],
       program_id: [
-        type: {:custom, Solana, :check_pubkey, []},
+        type: {:custom, Solana.Key, :check, []},
         doc: "Program ID to assign as the owner of the allocated account"
       ],
       base: [
-        type: {:custom, Solana, :check_pubkey, []},
+        type: {:custom, Solana.Key, :check, []},
         doc: "Base public key to use to derive the allocated account address"
       ],
       seed: [
@@ -177,12 +177,12 @@ defmodule Solana.SystemProgram do
   def nonce_initialize(params) do
     schema = [
       nonce: [
-        type: {:custom, Solana, :check_pubkey, []},
+        type: {:custom, Solana.Key, :check, []},
         required: true,
         doc: "Public key of the nonce account"
       ],
       authority: [
-        type: {:custom, Solana, :check_pubkey, []},
+        type: {:custom, Solana.Key, :check, []},
         required: true,
         doc: "Public key of the nonce authority"
       ]
@@ -208,17 +208,17 @@ defmodule Solana.SystemProgram do
   def nonce_authorize(params) do
     schema = [
       nonce: [
-        type: {:custom, Solana, :check_pubkey, []},
+        type: {:custom, Solana.Key, :check, []},
         required: true,
         doc: "Public key of the nonce account"
       ],
       authority: [
-        type: {:custom, Solana, :check_pubkey, []},
+        type: {:custom, Solana.Key, :check, []},
         required: true,
         doc: "Public key of the nonce authority"
       ],
       new_authority: [
-        type: {:custom, Solana, :check_pubkey, []},
+        type: {:custom, Solana.Key, :check, []},
         required: true,
         doc: "Public key to set as the new nonce authority"
       ]
@@ -243,12 +243,12 @@ defmodule Solana.SystemProgram do
   def nonce_advance(params) do
     schema = [
       nonce: [
-        type: {:custom, Solana, :check_pubkey, []},
+        type: {:custom, Solana.Key, :check, []},
         required: true,
         doc: "Public key of the nonce account"
       ],
       authority: [
-        type: {:custom, Solana, :check_pubkey, []},
+        type: {:custom, Solana.Key, :check, []},
         required: true,
         doc: "Public key of the nonce authority"
       ]
@@ -274,17 +274,17 @@ defmodule Solana.SystemProgram do
   def nonce_withdraw(params) do
     schema = [
       nonce: [
-        type: {:custom, Solana, :check_pubkey, []},
+        type: {:custom, Solana.Key, :check, []},
         required: true,
         doc: "Public key of the nonce account"
       ],
       authority: [
-        type: {:custom, Solana, :check_pubkey, []},
+        type: {:custom, Solana.Key, :check, []},
         required: true,
         doc: "Public key of the nonce authority"
       ],
       to: [
-        type: {:custom, Solana, :check_pubkey, []},
+        type: {:custom, Solana.Key, :check, []},
         required: true,
         doc: "Public key of the account which will get the withdrawn lamports"
       ],
