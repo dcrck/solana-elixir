@@ -1,9 +1,10 @@
 defmodule Solana.SystemProgram do
   alias Solana.{Instruction, Account}
+  import Solana.Helpers
 
   def id(), do: Solana.pubkey!("11111111111111111111111111111111")
 
-  def create_account(params) do
+  def create_account(opts) do
     schema = [
       lamports: [
         type: :pos_integer,
@@ -40,8 +41,8 @@ defmodule Solana.SystemProgram do
       ]
     ]
 
-    case NimbleOptions.validate(Enum.into(params, []), schema) do
-      {:ok, _} ->
+    case validate(opts, schema) do
+      {:ok, params} ->
         maybe_with_seed(
           params,
           &create_account_ix/1,
@@ -54,7 +55,7 @@ defmodule Solana.SystemProgram do
     end
   end
 
-  def transfer(params) do
+  def transfer(opts) do
     schema = [
       lamports: [
         type: :pos_integer,
@@ -85,8 +86,8 @@ defmodule Solana.SystemProgram do
       ]
     ]
 
-    case NimbleOptions.validate(Enum.into(params, []), schema) do
-      {:ok, _} ->
+    case validate(opts, schema) do
+      {:ok, params} ->
         maybe_with_seed(
           params,
           &transfer_ix/1,
@@ -98,7 +99,7 @@ defmodule Solana.SystemProgram do
     end
   end
 
-  def assign(params) do
+  def assign(opts) do
     schema = [
       key: [
         type: {:custom, Solana.Key, :check, []},
@@ -120,8 +121,8 @@ defmodule Solana.SystemProgram do
       ]
     ]
 
-    case NimbleOptions.validate(Enum.into(params, []), schema) do
-      {:ok, _} ->
+    case validate(opts, schema) do
+      {:ok, params} ->
         maybe_with_seed(
           params,
           &assign_ix/1,
@@ -134,7 +135,7 @@ defmodule Solana.SystemProgram do
     end
   end
 
-  def allocate(params) do
+  def allocate(opts) do
     schema = [
       key: [
         type: {:custom, Solana.Key, :check, []},
@@ -160,8 +161,8 @@ defmodule Solana.SystemProgram do
       ]
     ]
 
-    case NimbleOptions.validate(Enum.into(params, []), schema) do
-      {:ok, _} ->
+    case validate(opts, schema) do
+      {:ok, params} ->
         maybe_with_seed(
           params,
           &allocate_ix/1,
@@ -174,7 +175,7 @@ defmodule Solana.SystemProgram do
     end
   end
 
-  def nonce_initialize(params) do
+  def nonce_initialize(opts) do
     schema = [
       nonce: [
         type: {:custom, Solana.Key, :check, []},
@@ -188,8 +189,8 @@ defmodule Solana.SystemProgram do
       ]
     ]
 
-    case NimbleOptions.validate(Enum.into(params, []), schema) do
-      {:ok, _} ->
+    case validate(opts, schema) do
+      {:ok, params} ->
         %Instruction{
           program: id(),
           accounts: [
@@ -205,7 +206,7 @@ defmodule Solana.SystemProgram do
     end
   end
 
-  def nonce_authorize(params) do
+  def nonce_authorize(opts) do
     schema = [
       nonce: [
         type: {:custom, Solana.Key, :check, []},
@@ -224,8 +225,8 @@ defmodule Solana.SystemProgram do
       ]
     ]
 
-    case NimbleOptions.validate(Enum.into(params, []), schema) do
-      {:ok, _} ->
+    case validate(opts, schema) do
+      {:ok, params} ->
         %Instruction{
           program: id(),
           accounts: [
@@ -240,7 +241,7 @@ defmodule Solana.SystemProgram do
     end
   end
 
-  def nonce_advance(params) do
+  def nonce_advance(opts) do
     schema = [
       nonce: [
         type: {:custom, Solana.Key, :check, []},
@@ -254,8 +255,8 @@ defmodule Solana.SystemProgram do
       ]
     ]
 
-    case NimbleOptions.validate(Enum.into(params, []), schema) do
-      {:ok, _} ->
+    case validate(opts, schema) do
+      {:ok, params} ->
         %Instruction{
           program: id(),
           accounts: [
@@ -271,7 +272,7 @@ defmodule Solana.SystemProgram do
     end
   end
 
-  def nonce_withdraw(params) do
+  def nonce_withdraw(opts) do
     schema = [
       nonce: [
         type: {:custom, Solana.Key, :check, []},
@@ -295,8 +296,8 @@ defmodule Solana.SystemProgram do
       ]
     ]
 
-    case NimbleOptions.validate(Enum.into(params, []), schema) do
-      {:ok, _} ->
+    case validate(opts, schema) do
+      {:ok, params} ->
         %Instruction{
           program: id(),
           accounts: [
