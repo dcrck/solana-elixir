@@ -3,17 +3,17 @@ defmodule Solana.Key do
   functions for creating and checking Solana keys and keypairs
   """
 
-  @type key :: Ed25519.key()
-  @type keypair :: {key(), key()}
+  @type t :: Ed25519.key()
+  @type pair :: {t(), t()}
 
-  @spec pair() :: keypair
+  @spec pair() :: pair
   defdelegate pair, to: Ed25519, as: :generate_key_pair
 
   @doc """
   decodes a base58-encoded key and returns it in a tuple. If it fails, return
   an error tuple.
   """
-  @spec decode(encoded :: binary) :: {:ok, key} | {:error, :invalid_key}
+  @spec decode(encoded :: binary) :: {:ok, t} | {:error, :invalid_key}
   def decode(encoded) when is_binary(encoded) do
     encoded |> B58.decode58!() |> check()
   end
@@ -24,7 +24,7 @@ defmodule Solana.Key do
   decodes a base58-encoded key and returns it. Throws an `ArgumentError` if it
   fails.
   """
-  @spec decode!(encoded :: binary) :: key
+  @spec decode!(encoded :: binary) :: t
   def decode!(encoded) when is_binary(encoded) do
     case decode(encoded) do
       {:ok, key} ->
@@ -38,12 +38,12 @@ defmodule Solana.Key do
   @doc """
   Checks to see if a key is valid.
   """
-  @spec check(binary) :: {:ok, key} | {:error, :invalid_key}
+  @spec check(binary) :: {:ok, t} | {:error, :invalid_key}
   def check(<<key::binary-32>>), do: {:ok, key}
   def check(_), do: {:error, :invalid_key}
 
-  @spec with_seed(from :: key, seed :: binary, program_id :: key) ::
-          {:ok, key} | {:error, :invalid_key}
+  @spec with_seed(from :: t, seed :: binary, program_id :: t) ::
+          {:ok, t} | {:error, :invalid_key}
   def with_seed(from, seed, program_id) do
     with {:ok, from} <- check(from),
          {:ok, program_id} <- check(program_id) do
@@ -58,8 +58,8 @@ defmodule Solana.Key do
   @doc """
   Derives a program address from seeds and a program ID.
   """
-  @spec derive_address(seeds :: [binary], program_id :: key) ::
-          {:ok, key} | {:error, term}
+  @spec derive_address(seeds :: [binary], program_id :: t) ::
+          {:ok, t} | {:error, term}
   def derive_address(seeds, program_id) do
     with {:ok, program_id} <- check(program_id),
          true <- Enum.all?(seeds, &(is_binary(&1) && byte_size(&1) <= 32)) do
@@ -85,8 +85,8 @@ defmodule Solana.Key do
   then combine each one with the given seeds and program ID until a valid
   address is found. If we can't find one, return an error tuple.
   """
-  @spec find_address(seeds :: [binary], program_id :: key) ::
-          {:ok, key, byte} | {:error, term}
+  @spec find_address(seeds :: [binary], program_id :: t) ::
+          {:ok, t, byte} | {:error, term}
   def find_address(seeds, program_id) do
     case check(program_id) do
       {:ok, program_id} ->
