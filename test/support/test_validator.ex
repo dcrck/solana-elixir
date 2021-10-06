@@ -2,7 +2,7 @@ defmodule Solana.TestValidator do
   use GenServer
   require Logger
 
-  def start_link(opts) do
+  def start_link(config) do
     schema = [
       bind_address: [type: :string, default: "0.0.0.0"],
       bpf_program: [type: :string],
@@ -31,7 +31,7 @@ defmodule Solana.TestValidator do
       warp_slot: [type: :string]
     ]
 
-    with {:ok, opts} <- NimbleOptions.validate(opts, schema),
+    with {:ok, opts} <- NimbleOptions.validate(config, schema),
          {:ok, validator} <- GenServer.start_link(__MODULE__, opts, name: __MODULE__) do
       {:ok, validator}
     else
@@ -61,10 +61,11 @@ defmodule Solana.TestValidator do
     else
       false ->
         Logger.error("requested ledger directory does not exist")
-        {:stop}
+        {:stop, :no_dir}
 
       nil ->
-        {:stop, "solana-test-validator executable not found, make sure it's in your PATH"}
+        Logger.error("solana-test-validator executable not found, make sure it's in your PATH")
+        {:stop, :no_validator}
     end
   end
 
