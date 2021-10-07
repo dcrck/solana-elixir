@@ -90,5 +90,10 @@ defmodule Solana.KeyTest do
   end
 
   describe "find_address/2" do
+    test "finds a program address" do
+      program_id = Key.decode!("BPFLoader1111111111111111111111111111111111")
+      {:ok, address, nonce} = Key.find_address([""], program_id)
+      assert {:ok, ^address} = Key.derive_address(["", nonce], program_id)
+    end
   end
 end

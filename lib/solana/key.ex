@@ -62,7 +62,7 @@ defmodule Solana.Key do
           {:ok, t} | {:error, term}
   def derive_address(seeds, program_id) do
     with {:ok, program_id} <- check(program_id),
-         true <- Enum.all?(seeds, &(is_binary(&1) && byte_size(&1) <= 32)) do
+         true <- Enum.all?(seeds, &is_valid_seed?/1) do
       [seeds, program_id, "ProgramDerivedAddress"]
       |> hash()
       |> verify_off_curve()
@@ -70,6 +70,10 @@ defmodule Solana.Key do
       err = {:error, _} -> err
       false -> {:error, :invalid_seeds}
     end
+  end
+
+  defp is_valid_seed?(seed) do
+    (is_binary(seed) && byte_size(seed) <= 32) || seed in 0..255
   end
 
   defp hash(data), do: :crypto.hash(:sha256, data)
@@ -90,7 +94,7 @@ defmodule Solana.Key do
   def find_address(seeds, program_id) do
     case check(program_id) do
       {:ok, program_id} ->
-        Enum.reduce_while(255..1, {:cont, {:error, :no_nonce}}, fn nonce, acc ->
+        Enum.reduce_while(255..1, {:error, :no_nonce}, fn nonce, acc ->
           case derive_address(List.flatten([seeds, nonce]), program_id) do
             {:ok, address} -> {:halt, {:ok, address, nonce}}
             _err -> {:cont, acc}
