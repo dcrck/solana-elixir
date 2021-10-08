@@ -6,28 +6,19 @@ defmodule Solana.TestValidator do
     schema = [
       bind_address: [type: :string, default: "0.0.0.0"],
       bpf_program: [type: :string],
-      c: [type: {:custom, Solana, :pubkey, []}, rename_to: :clone],
       clone: [type: {:custom, Solana, :pubkey, []}],
-      C: [
-        type: :string,
-        default: Path.expand("~/.config/solana/cli/config.yml"),
-        rename_to: :config
-      ],
       config: [type: :string, default: Path.expand("~/.config/solana/cli/config.yml")],
       dynamic_port_range: [type: :string, default: "1024-65535"],
       faucet_port: [type: :pos_integer, default: 9900],
       faucet_sol: [type: :pos_integer, default: 1_000_000],
       gossip_host: [type: :string, default: "127.0.0.1"],
       gossip_port: [type: :pos_integer],
-      u: [type: :string, rename_to: :url],
       url: [type: :string],
-      l: [type: :string, default: "test-ledger", rename_to: :ledger],
       ledger: [type: :string, default: "test-ledger"],
       limit_ledger_size: [type: :pos_integer, default: 10_000],
       mint: [type: {:custom, Solana, :pubkey, []}],
       rpc_port: [type: :pos_integer, default: 8899],
       slots_per_epoch: [type: :pos_integer],
-      w: [type: :string, rename_to: :warp_slot],
       warp_slot: [type: :string]
     ]
 
@@ -79,9 +70,9 @@ defmodule Solana.TestValidator do
     |> String.split()
   end
 
-  def terminate(reason, %{port: port, ledger: ledger}) do
+  def terminate(reason, %{port: port}) do
     os_pid = port |> Port.info() |> Keyword.get(:os_pid)
-    if reason == :normal, do: File.rm_rf(ledger)
+    # if reason == :normal, do: File.rm_rf(ledger)
     Logger.info("** stopped solana-test-validator (pid #{os_pid}): #{inspect(reason)}")
     :normal
   end
