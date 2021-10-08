@@ -7,7 +7,16 @@ defmodule Solana do
   @type keypair :: Solana.Key.pair()
 
   defdelegate keypair(), to: Solana.Key, as: :pair
+
+  def pubkey({_sk, pk}), do: Solana.Key.check(pk)
   defdelegate pubkey(encoded), to: Solana.Key, as: :decode
+
+  def pubkey!(pair = {_sk, _pk}) do
+    case pubkey(pair) do
+      {:ok, key} -> key
+      _ -> raise ArgumentError, "invalid keypair: #{inspect pair}"
+    end
+  end
   defdelegate pubkey!(encoded), to: Solana.Key, as: :decode!
 
   @doc """
@@ -20,4 +29,6 @@ defmodule Solana do
   # sysvars
   def rent(), do: pubkey!("SysvarRent111111111111111111111111111111111")
   def recent_blockhashes(), do: pubkey!("SysvarRecentB1ockHashes11111111111111111111")
+
+  def lamports_per_sol(), do: 1_000_000_000
 end
