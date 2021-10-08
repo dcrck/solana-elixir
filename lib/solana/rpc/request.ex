@@ -7,8 +7,6 @@ defmodule Solana.RPC.Request do
           params: list
         }
 
-  @lamports_per_sol 1_000_000_000
-
   @doc """
   Encodes requests in the required format
   """
@@ -36,7 +34,7 @@ defmodule Solana.RPC.Request do
 
   @doc """
   Returns all information associated with the account of the provided Pubkey.
-  For more information, see (the Solana docs)[https://docs.solana.com/developing/clients/jsonrpc-api#getaccountinfo].
+  For more information, see [the Solana docs](https://docs.solana.com/developing/clients/jsonrpc-api#getaccountinfo).
   """
   @spec get_account_info(account :: Solana.key(), opts :: keyword) :: t
   def get_account_info(account, opts \\ []) do
@@ -45,7 +43,7 @@ defmodule Solana.RPC.Request do
 
   @doc """
   Returns the balance of the provided pubkey's account. For more information,
-  see (the Solana docs)[https://docs.solana.com/developing/clients/jsonrpc-api#getbalance].
+  see [the Solana docs](https://docs.solana.com/developing/clients/jsonrpc-api#getbalance).
   """
   @spec get_balance(account :: Solana.key(), opts :: keyword) :: t
   def get_balance(account, opts \\ []) do
@@ -54,7 +52,7 @@ defmodule Solana.RPC.Request do
 
   @doc """
   Returns identity and transaction information about a confirmed block in the
-  ledger. For more information, see (the Solana docs)[https://docs.solana.com/developing/clients/jsonrpc-api#getblock].
+  ledger. For more information, see [the Solana docs](https://docs.solana.com/developing/clients/jsonrpc-api#getblock).
   """
   @spec get_block(start_slot :: non_neg_integer, opts :: keyword) :: t
   def get_block(start_slot, opts \\ []) do
@@ -64,7 +62,7 @@ defmodule Solana.RPC.Request do
   @doc """
   Returns a recent block hash from the ledger, and a fee schedule that can be
   used to compute the cost of submitting a transaction using it. For more
-  information, see (the Solana docs)[https://docs.solana.com/developing/clients/jsonrpc-api#getrecentblockhash].
+  information, see [the Solana docs](https://docs.solana.com/developing/clients/jsonrpc-api#getrecentblockhash).
   """
   @spec get_recent_blockhash(opts :: keyword) :: t
   def get_recent_blockhash(opts \\ []) do
@@ -73,7 +71,7 @@ defmodule Solana.RPC.Request do
 
   @doc """
   Returns minimum balance required to make account rent exempt. For more
-  information, see (the Solana docs)[https://docs.solana.com/developing/clients/jsonrpc-api#getminimumbalanceforrentexemption].
+  information, see [the Solana docs](https://docs.solana.com/developing/clients/jsonrpc-api#getminimumbalanceforrentexemption).
   """
   @spec get_minimum_balance_for_rent_exemption(length :: non_neg_integer, opts :: keyword) :: t
   def get_minimum_balance_for_rent_exemption(length, opts \\ []) do
@@ -82,27 +80,37 @@ defmodule Solana.RPC.Request do
 
   @doc """
   Submits a signed transaction to the cluster for processing. For more
-  information, see (the Solana docs)[https://docs.solana.com/developing/clients/jsonrpc-api#sendtransaction].
+  information, see [the Solana docs](https://docs.solana.com/developing/clients/jsonrpc-api#sendtransaction).
   """
   @spec send_transaction(transaction :: Solana.Transaction.t(), opts :: keyword) :: t
   def send_transaction(tx = %Solana.Transaction{}, opts \\ []) do
     {:ok, tx_bin} = Solana.Transaction.to_binary(tx)
-    {"sendTransaction", [Base.encode64(tx_bin), encode_opts(opts, %{"encoding" => "base64"})]}
+    opts = opts |> fix_tx_opts() |> encode_opts(%{"encoding" => "base64"})
+    {"sendTransaction", [Base.encode64(tx_bin), opts]}
+  end
+
+  defp fix_tx_opts(opts) do
+    opts
+    |> Enum.map(fn
+      {:commitment, commitment} -> {:preflight_commitment, commitment}
+      other -> other
+    end)
+    |> Enum.into([])
   end
 
   @doc """
   Requests an airdrop of lamports to a Pubkey. For more information, see
-  (the Solana docs)[https://docs.solana.com/developing/clients/jsonrpc-api#requestairdrop].
+  [the Solana docs](https://docs.solana.com/developing/clients/jsonrpc-api#requestairdrop).
   """
   @spec request_airdrop(account :: Solana.key(), lamports :: pos_integer, opts :: keyword) :: t
   def request_airdrop(account, sol, opts \\ []) do
-    {"requestAirdrop", [B58.encode58(account), sol * @lamports_per_sol, encode_opts(opts)]}
+    {"requestAirdrop", [B58.encode58(account), sol * Solana.lamports_per_sol(), encode_opts(opts)]}
   end
 
   @doc """
   Returns confirmed signatures for transactions involving an address backwards
   in time from the provided signature or most recent confirmed block. For more
-  information, see (the Solana docs)[https://docs.solana.com/developing/clients/jsonrpc-api#getsignaturesforaddress].
+  information, see [the Solana docs](https://docs.solana.com/developing/clients/jsonrpc-api#getsignaturesforaddress).
   """
   @spec get_signatures_for_address(account :: Solana.key(), opts :: keyword) :: t
   def get_signatures_for_address(account, opts \\ []) do
@@ -110,8 +118,21 @@ defmodule Solana.RPC.Request do
   end
 
   @doc """
+  Returns the statuses of a list of signatures. Unless the
+  `searchTransactionHistory` configuration parameter is included, this method only
+  searches the recent status cache of signatures, which retains statuses for all
+  active slots plus `MAX_RECENT_BLOCKHASHES` rooted slots. For more information,
+  see [the Solana
+  docs](https://docs.solana.com/developing/clients/jsonrpc-api#getsignaturestatuses).
+  """
+  @spec get_signature_statuses(signatures :: [Solana.key()], opts :: keyword) :: t
+  def get_signature_statuses(signatures, opts \\ []) do
+    {"getSignatureStatuses", [Enum.map(signatures, &B58.encode58/1), encode_opts(opts)]}
+  end
+
+  @doc """
   Returns transaction details for a confirmed transaction. For more information,
-  see (the Solana docs)[https://docs.solana.com/developing/clients/jsonrpc-api#gettransaction].
+  see [the Solana docs](https://docs.solana.com/developing/clients/jsonrpc-api#gettransaction).
   """
   @spec get_transaction(signature :: Solana.key(), opts :: keyword) :: t
   def get_transaction(signature, opts \\ []) do
@@ -120,7 +141,7 @@ defmodule Solana.RPC.Request do
 
   @doc """
   Returns the total supply of an SPL Token type. For more information, see
-  (the Solana docs)[https://docs.solana.com/developing/clients/jsonrpc-api#gettokensupply].
+  [the Solana docs](https://docs.solana.com/developing/clients/jsonrpc-api#gettokensupply).
   """
   @spec get_token_supply(mint :: Solana.key(), opts :: keyword) :: t
   def get_token_supply(mint, opts \\ []) do
@@ -129,7 +150,8 @@ defmodule Solana.RPC.Request do
 
   @doc """
   Returns the 20 largest accounts of a particular SPL Token type. For more
-  information, see (the Solana docs)[https://docs.solana.com/developing/clients/jsonrpc-api#gettokenlargestaccounts].
+  information, see [the Solana
+  docs](https://docs.solana.com/developing/clients/jsonrpc-api#gettokenlargestaccounts).
   """
   @spec get_token_largest_accounts(mint :: Solana.key(), opts :: keyword) :: t
   def get_token_largest_accounts(mint, opts \\ []) do
