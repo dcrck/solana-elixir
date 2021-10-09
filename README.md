@@ -1,6 +1,6 @@
 # Solana
 
-A Solana RPC API client written in Elixir
+The unofficial Elixir client for the [Solana](https://solana.com) blockchain.
 
 ## Installation
 
@@ -18,4 +18,3 @@ end
 Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
 and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
 be found at [https://hexdocs.pm/solana](https://hexdocs.pm/solana).
-
