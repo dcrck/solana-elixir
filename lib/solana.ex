@@ -22,8 +22,7 @@ defmodule Solana do
   @doc """
   Creates or retrieves a client to interact with Solana's JSON RPC API.
   """
-  @spec rpc_client(keyword | pid) :: Tesla.Client.t() | pid
-  def rpc_client(rpc) when is_pid(rpc), do: Solana.RPC.client(rpc)
+  @spec rpc_client(keyword) :: Tesla.Client.t()
   def rpc_client(config), do: Solana.RPC.client(Enum.into(config, %{}))
 
   # sysvars

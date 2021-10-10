@@ -33,8 +33,6 @@ defmodule Solana.MixProject do
       {:basefiftyeight, "~> 0.1.0"},
       # validating parameters
       {:nimble_options, "~> 0.3.0"},
-      # for the API rate limiter
-      {:gen_stage, "~> 1.0", optional: true}
     ]
   end
 end

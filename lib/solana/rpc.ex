@@ -1,39 +1,12 @@
 defmodule Solana.RPC do
-  use Supervisor
   require Logger
 
   alias Solana.RPC
 
-  def start_link(config) do
-    Supervisor.start_link(__MODULE__, config, name: __MODULE__)
-  end
-
-  def init(config) do
-    Supervisor.init(children(config), strategy: :rest_for_one)
-  end
-
-  defp children(config) do
-    [
-      RPC.Client,
-      RPC.RateLimiter,
-      {RPC.Runner, config}
-    ]
-  end
-
   @doc """
   Creates an API client used to interact with Solana's JSON-RPC API
   """
-  @spec client(map | pid()) :: Tesla.Client.t() | pid()
-  def client(rpc) when is_pid(rpc) do
-    rpc
-    |> Supervisor.which_children()
-    |> Enum.find(&(elem(&1, 0) == RPC.Client))
-    |> case do
-      nil -> nil
-      child -> elem(child, 1)
-    end
-  end
-
+  @spec client(map) :: Tesla.Client.t()
   def client(config = %{}) do
     middleware = [
       {Tesla.Middleware.BaseUrl, url(config)},
@@ -49,7 +22,7 @@ defmodule Solana.RPC do
   Sends the provided requests to the configured Solana RPC endpoint.
   """
   def send(client, requests) do
-    RPC.Client.send(client, requests)
+    Tesla.post(client, "/", Solana.RPC.Request.encode(requests))
   end
 
   @doc """
