@@ -41,6 +41,13 @@ defmodule Solana.RPC.Middleware do
     {:ok, B58.decode58!(airdrop_tx)}
   end
 
+  defp decode_result({"getSignaturesForAddress", signature_responses}) do
+    responses = Enum.map(signature_responses, fn response ->
+      update_in(response, ["signature"], &B58.decode58!/1)
+    end)
+    {:ok, responses}
+  end
+
   defp decode_result({"getRecentBlockhash", blockhash_result}) do
     {:ok, update_in(blockhash_result, ["blockhash"], &B58.decode58!/1)}
   end
