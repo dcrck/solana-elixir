@@ -38,7 +38,7 @@ defmodule Solana.RPC.Request do
   """
   @spec get_account_info(account :: Solana.key(), opts :: keyword) :: t
   def get_account_info(account, opts \\ []) do
-    {"getAccountInfo", [B58.encode58(account), encode_opts(opts)]}
+    {"getAccountInfo", [B58.encode58(account), encode_opts(opts, %{"encoding" => "base64"})]}
   end
 
   @doc """
