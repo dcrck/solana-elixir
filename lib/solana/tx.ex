@@ -23,6 +23,13 @@ defmodule Solana.Transaction do
     signers: []
   ]
 
+  @doc """
+  Checks to see if a signature is valid
+  """
+  @spec check(binary) :: {:ok, binary} | {:error, :invalid_signature}
+  def check(<<signature::binary-64>>), do: {:ok, signature}
+  def check(_), do: {:error, :invalid_signature}
+
   @spec to_binary(tx :: t) :: {:ok, binary()} | {:error, encoding_err()}
   def to_binary(%__MODULE__{payer: nil}), do: {:error, :no_payer}
   def to_binary(%__MODULE__{blockhash: nil}), do: {:error, :no_blockhash}

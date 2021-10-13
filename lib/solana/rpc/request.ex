@@ -159,7 +159,7 @@ defmodule Solana.RPC.Request do
   end
 
   defp encode_opts(opts, defaults \\ %{}) do
-    Enum.into(opts, defaults, fn {k, v} -> {camelize(k), v} end)
+    Enum.into(opts, defaults, fn {k, v} -> {camelize(k), encode_value(v)} end)
   end
 
   defp camelize(word) do
@@ -180,5 +180,13 @@ defmodule Solana.RPC.Request do
 
   defp camelize_list([h | tail], :upper) do
     [String.capitalize(h)] ++ camelize_list(tail, :upper)
+  end
+
+  defp encode_value(v) do
+    cond do
+      :ok == elem(Solana.Key.check(v), 0) -> B58.encode58(v)
+      :ok == elem(Solana.Transaction.check(v), 0) -> B58.encode58(v)
+      true -> v
+    end
   end
 end
