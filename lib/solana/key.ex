@@ -13,12 +13,12 @@ defmodule Solana.Key do
   decodes a base58-encoded key and returns it in a tuple. If it fails, return
   an error tuple.
   """
-  @spec decode(encoded :: binary) :: {:ok, t} | {:error, :invalid_key}
+  @spec decode(encoded :: binary) :: {:ok, t} | {:error, binary}
   def decode(encoded) when is_binary(encoded) do
     encoded |> B58.decode58!() |> check()
   end
 
-  def decode(_), do: {:error, :invalid_key}
+  def decode(_), do: {:error, "invalid public key"}
 
   @doc """
   decodes a base58-encoded key and returns it. Throws an `ArgumentError` if it
@@ -30,7 +30,7 @@ defmodule Solana.Key do
       {:ok, key} ->
         key
 
-      {:error, :invalid_key} ->
+      {:error, _} ->
         raise ArgumentError, "invalid public key input: #{encoded}"
     end
   end
@@ -38,12 +38,12 @@ defmodule Solana.Key do
   @doc """
   Checks to see if a key is valid.
   """
-  @spec check(binary) :: {:ok, t} | {:error, :invalid_key}
+  @spec check(binary) :: {:ok, t} | {:error, binary}
   def check(<<key::binary-32>>), do: {:ok, key}
-  def check(_), do: {:error, :invalid_key}
+  def check(_), do: {:error, "invalid public key"}
 
   @spec with_seed(from :: t, seed :: binary, program_id :: t) ::
-          {:ok, t} | {:error, :invalid_key}
+          {:ok, t} | {:error, binary}
   def with_seed(from, seed, program_id) do
     with {:ok, from} <- check(from),
          {:ok, program_id} <- check(program_id) do
