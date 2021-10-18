@@ -36,6 +36,7 @@ defmodule Solana.Transaction do
   def to_binary(%__MODULE__{instructions: []}), do: {:error, :no_instructions}
 
   def to_binary(tx = %__MODULE__{instructions: ixs, signers: signers}) do
+    ixs = List.flatten(ixs)
     with nil <- Enum.find_index(ixs, &is_nil(&1.program)),
          accounts = compile_accounts(ixs, tx.payer),
          true <- signers_match?(accounts, signers) do
