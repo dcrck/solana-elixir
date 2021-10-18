@@ -41,7 +41,7 @@ defmodule Solana.RPC do
     |> Enum.flat_map(fn
       {:ok, signature} ->
         [signature]
-      {:error, %{"data" => %{"err" => error, "logs" => logs}, "message" => message}} ->
+      {:error, %{"data" => %{"logs" => logs}, "message" => message}} ->
         [message | logs]
         |> Enum.join("\n")
         |> Logger.error()
