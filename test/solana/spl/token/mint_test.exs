@@ -14,8 +14,9 @@ defmodule Solana.SPL.Token.MintTest do
   end
 
   describe "init/1" do
-    test "initializes a new mint", global do
+    test "initializes a new mint, with and without a freeze_authority", global do
       new = Solana.keypair()
+      freeze = Solana.keypair()
       {_, auth_pk} = Solana.keypair()
       opts = [commitment: "confirmed"]
       space = Token.Mint.byte_size()
@@ -35,18 +36,27 @@ defmodule Solana.SPL.Token.MintTest do
             authority: auth_pk,
             new: Solana.pubkey!(new),
             decimals: 0
+          ),
+          Token.Mint.init(
+            balance: lamports,
+            payer: Solana.pubkey!(global.payer),
+            authority: auth_pk,
+            freeze_authority: auth_pk,
+            new: Solana.pubkey!(freeze),
+            decimals: 0
           )
         ],
-        signers: [global.payer, new],
+        signers: [global.payer, new, freeze],
         blockhash: blockhash,
         payer: Solana.pubkey!(global.payer)
       }
 
       opts = [commitment: "confirmed", timeout: 1_000]
-      {:ok, _signature} = RPC.send_and_confirm(global.client, global.tracker, tx, opts)
+      {:ok, _signatures} = RPC.send_and_confirm(global.client, global.tracker, tx, opts)
       opts = [commitment: "confirmed", encoding: "jsonParsed"]
       assert {:ok, mint} =
         RPC.send(global.client, RPC.Request.get_account_info(Solana.pubkey!(new), opts))
+
       assert %Token.Mint{
         decimals: 0,
         authority: ^auth_pk,
@@ -54,6 +64,17 @@ defmodule Solana.SPL.Token.MintTest do
         freeze_authority: nil,
         supply: 0
       } = Token.Mint.from_account_info(mint)
+
+      assert {:ok, freeze_mint} =
+        RPC.send(global.client, RPC.Request.get_account_info(Solana.pubkey!(freeze), opts))
+
+      assert %Token.Mint{
+        decimals: 0,
+        authority: ^auth_pk,
+        initialized?: true,
+        freeze_authority: ^auth_pk,
+        supply: 0
+      } = Token.Mint.from_account_info(freeze_mint)
     end
   end
 end
