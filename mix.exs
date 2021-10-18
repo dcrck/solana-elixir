@@ -31,8 +31,8 @@ defmodule Solana.MixProject do
       {:ed25519, git: "git://github.com/dcrck/ed25519_ex.git"},
       # base58 encoding
       {:basefiftyeight, "~> 0.1.0"},
-      # validating parameters
-      {:nimble_options, "~> 0.3.0"},
+      # validating parameters (use this one until my changes get merged)
+      {:nimble_options, git: "git://github.com/dcrck/nimble_options.git"},
     ]
   end
 end
