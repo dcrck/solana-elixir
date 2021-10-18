@@ -23,13 +23,13 @@ defmodule Solana.SPL.Token.Mint do
       decimals: info["decimals"],
       authority: B58.decode58!(info["mintAuthority"]),
       initialized?: info["isInitialized"],
-      freeze_authority: freeze_authority(info),
+      freeze_authority: extract_freeze_authority(info),
       supply: String.to_integer(info["supply"])
     }
   end
 
-  defp freeze_authority(%{"freezeAuthority" => nil}), do: nil
-  defp freeze_authority(%{"freezeAuthority" => auth}), do: B58.decode58!(auth)
+  defp extract_freeze_authority(%{"freezeAuthority" => nil}), do: nil
+  defp extract_freeze_authority(%{"freezeAuthority" => auth}), do: B58.decode58!(auth)
 
   def from_account_info(_), do: :error
 

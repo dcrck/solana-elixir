@@ -13,7 +13,6 @@ defmodule Solana.SPL.Token.MintTest do
     [tracker: tracker, client: client, payer: payer]
   end
 
-  # TODO add init/1 tests
   describe "init/1" do
     test "initializes a new mint", global do
       new = Solana.keypair()
@@ -52,6 +51,7 @@ defmodule Solana.SPL.Token.MintTest do
         decimals: 0,
         authority: ^auth_pk,
         initialized?: true,
+        freeze_authority: nil,
         supply: 0
       } = Token.Mint.from_account_info(mint)
     end
