@@ -3,7 +3,6 @@ defmodule Solana.SPL.Token do
   import Solana.Helpers
 
   @type t :: %__MODULE__{
-          address: Solana.key(),
           mint: Solana.key(),
           owner: Solana.key(),
           amount: non_neg_integer,
@@ -19,18 +18,36 @@ defmodule Solana.SPL.Token do
   @authority_types [:mint, :freeze, :owner, :close]
 
   defstruct [
-    :address,
     :mint,
     :owner,
     :amount,
     :delegate,
-    :delegated_amount,
     :rent_exempt_reserve,
     :close_authority,
+    delegated_amount: 0,
     initialized?: false,
     frozen?: false,
     native?: false
   ]
+
+  @doc """
+  Translates the result of a `get_account_info` RPC API call into a `Token`.
+  """
+  def from_account_info(%{"data" => %{"parsed" => %{"info" => info}}})  do
+    %__MODULE__{
+      native?: info["isNative"],
+      mint: B58.decode58!(info["mint"]),
+      owner: B58.decode58!(info["owner"]),
+      amount: String.to_integer(get_in(info, ["tokenAmount", "amount"]))
+    }
+    |> add_state(info)
+  end
+
+  def from_account_info(_), do: :error
+
+  defp add_state(token, %{"state" => "initialized"}) do
+    %{token | initialized?: true}
+  end
 
   def id(), do: Solana.pubkey!("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
 
@@ -78,13 +95,13 @@ defmodule Solana.SPL.Token do
     case validate(opts, schema) do
       {:ok, params} ->
         [
-          SystemProgram.create_account(%{
+          SystemProgram.create_account(
             lamports: params.balance,
             space: byte_size(),
             from: params.payer,
             new: params.new,
             program_id: id()
-          }),
+          ),
           initialize_ix(params)
         ]
 
