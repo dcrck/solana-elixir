@@ -8,17 +8,30 @@ defmodule Solana.SPL.Token.Mint do
           decimals: byte,
           initialized?: boolean,
           freeze_authority: Solana.key() | nil,
-          key: Solana.key()
         }
 
   defstruct [
     :authority,
     :supply,
     :freeze_authority,
-    :key,
     decimals: 0,
     initialized?: false
   ]
+
+  def from_account_info(%{"data" => %{"parsed" => %{"type" => "mint", "info" => info}}}) do
+    mint = %__MODULE__{
+      decimals: info["decimals"],
+      authority: B58.decode58!(info["mintAuthority"]),
+      initialized?: info["isInitialized"],
+      freeze_authority: freeze_authority(info),
+      supply: String.to_integer(info["supply"])
+    }
+  end
+
+  defp freeze_authority(%{"freezeAuthority" => nil}), do: nil
+  defp freeze_authority(%{"freezeAuthority" => auth}), do: B58.decode58!(auth)
+
+  def from_account_info(_), do: :error
 
   def byte_size(), do: 82
 
@@ -33,11 +46,6 @@ defmodule Solana.SPL.Token.Mint do
         type: :non_neg_integer,
         required: true,
         doc: "The lamport balance the mint account should have"
-      ],
-      program_id: [
-        type: {:custom, Solana.Key, :check, []},
-        doc: "Public key of the program which will own the created mint account",
-        default: SystemProgram.id()
       ],
       decimals: [
         type: {:in, 0..255},
@@ -63,13 +71,13 @@ defmodule Solana.SPL.Token.Mint do
     case validate(opts, schema) do
       {:ok, params} ->
         [
-          SystemProgram.create_account(%{
+          SystemProgram.create_account(
             lamports: params.balance,
             space: byte_size(),
             from: params.payer,
             new: params.new,
-            program_id: params.program_id
-          }),
+            program_id: Token.id()
+          ),
           initialize_ix(params)
         ]
 
