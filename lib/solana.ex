@@ -14,9 +14,10 @@ defmodule Solana do
   def pubkey!(pair = {_sk, _pk}) do
     case pubkey(pair) do
       {:ok, key} -> key
-      _ -> raise ArgumentError, "invalid keypair: #{inspect pair}"
+      _ -> raise ArgumentError, "invalid keypair: #{inspect(pair)}"
     end
   end
+
   defdelegate pubkey!(encoded), to: Solana.Key, as: :decode!
 
   @doc """

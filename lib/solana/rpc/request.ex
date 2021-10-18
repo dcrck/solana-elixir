@@ -104,7 +104,8 @@ defmodule Solana.RPC.Request do
   """
   @spec request_airdrop(account :: Solana.key(), lamports :: pos_integer, opts :: keyword) :: t
   def request_airdrop(account, sol, opts \\ []) do
-    {"requestAirdrop", [B58.encode58(account), sol * Solana.lamports_per_sol(), encode_opts(opts)]}
+    {"requestAirdrop",
+     [B58.encode58(account), sol * Solana.lamports_per_sol(), encode_opts(opts)]}
   end
 
   @doc """

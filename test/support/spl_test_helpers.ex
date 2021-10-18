@@ -5,10 +5,12 @@ defmodule Solana.SPL.TestHelpers do
     space = Token.Mint.byte_size()
 
     request_opts = [commitment: "confirmed"]
+
     tx_reqs = [
       RPC.Request.get_minimum_balance_for_rent_exemption(space, request_opts),
       RPC.Request.get_recent_blockhash(request_opts)
     ]
+
     [{:ok, lamports}, {:ok, %{"blockhash" => blockhash}}] = RPC.send(client, tx_reqs)
 
     opts = Keyword.put_new(opts, :new, Solana.keypair())

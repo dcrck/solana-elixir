@@ -7,7 +7,7 @@ defmodule Solana.SPL.Token.Mint do
           supply: non_neg_integer,
           decimals: byte,
           initialized?: boolean,
-          freeze_authority: Solana.key() | nil,
+          freeze_authority: Solana.key() | nil
         }
 
   defstruct [

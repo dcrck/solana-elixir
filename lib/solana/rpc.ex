@@ -31,28 +31,34 @@ defmodule Solana.RPC do
   an error tuple containing the list of all the transactions that were confirmed
   before the error occurred.
   """
-  @spec send_and_confirm(any, pid, [Solana.Transaction.t()] | Solana.Transaction.t, keyword) :: {:ok, [binary]} | {:error, :timeout, [binary]}
+  @spec send_and_confirm(any, pid, [Solana.Transaction.t()] | Solana.Transaction.t(), keyword) ::
+          {:ok, [binary]} | {:error, :timeout, [binary]}
   def send_and_confirm(client, tracker, txs, opts \\ []) do
     timeout = Keyword.get(opts, :timeout, 5_000)
     request_opts = Keyword.take(opts, [:commitment])
     requests = Enum.map(List.wrap(txs), &RPC.Request.send_transaction(&1, request_opts))
+
     client
     |> RPC.send(requests)
     |> Enum.flat_map(fn
       {:ok, signature} ->
         [signature]
+
       {:error, %{"data" => %{"logs" => logs}, "message" => message}} ->
         [message | logs]
         |> Enum.join("\n")
         |> Logger.error()
+
         []
+
       {:error, error} ->
-        Logger.error("error sending transaction: #{inspect error}")
+        Logger.error("error sending transaction: #{inspect(error)}")
         []
     end)
     |> case do
       [] ->
         :error
+
       signatures ->
         :ok = RPC.Tracker.start_tracking(tracker, signatures, request_opts)
         await_confirmations(signatures, timeout, [])

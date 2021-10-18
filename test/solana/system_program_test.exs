@@ -32,7 +32,7 @@ defmodule Solana.SystemProgramTest do
             space: 0,
             program_id: SystemProgram.id(),
             from: Solana.pubkey!(payer),
-            new: Solana.pubkey!(new),
+            new: Solana.pubkey!(new)
           )
         ],
         signers: [payer, new],
@@ -40,10 +40,11 @@ defmodule Solana.SystemProgramTest do
         payer: Solana.pubkey!(payer)
       }
 
-      {:ok, _signature} = RPC.send_and_confirm(client, tracker, tx, commitment: "confirmed", timeout: 1_000)
+      {:ok, _signature} =
+        RPC.send_and_confirm(client, tracker, tx, commitment: "confirmed", timeout: 1_000)
 
       assert {:ok, %{"lamports" => ^lamports}} =
-        RPC.send(client, RPC.Request.get_account_info(Solana.pubkey!(new), request_opts))
+               RPC.send(client, RPC.Request.get_account_info(Solana.pubkey!(new), request_opts))
     end
   end
 
@@ -59,7 +60,6 @@ defmodule Solana.SystemProgramTest do
 
       [{:ok, lamports}, {:ok, %{"blockhash" => blockhash}}] = RPC.send(client, tx_reqs)
 
-
       tx = %Transaction{
         instructions: [
           SystemProgram.create_account(
@@ -67,7 +67,7 @@ defmodule Solana.SystemProgramTest do
             space: 0,
             program_id: SystemProgram.id(),
             from: Solana.pubkey!(payer),
-            new: Solana.pubkey!(new),
+            new: Solana.pubkey!(new)
           )
         ],
         signers: [payer, new],
@@ -75,27 +75,30 @@ defmodule Solana.SystemProgramTest do
         payer: Solana.pubkey!(payer)
       }
 
-      {:ok, _signature} = RPC.send_and_confirm(client, tracker, tx, commitment: "confirmed", timeout: 1_000)
+      {:ok, _signature} =
+        RPC.send_and_confirm(client, tracker, tx, commitment: "confirmed", timeout: 1_000)
 
       amount = 1_000
 
       tx = %{
-        tx |
-        instructions: [
-          SystemProgram.transfer(
-            lamports: amount,
-            from: Solana.pubkey!(payer),
-            to: Solana.pubkey!(new),
-          )
-        ],
-        signers: [payer]
+        tx
+        | instructions: [
+            SystemProgram.transfer(
+              lamports: amount,
+              from: Solana.pubkey!(payer),
+              to: Solana.pubkey!(new)
+            )
+          ],
+          signers: [payer]
       }
 
-      {:ok, _signature} = RPC.send_and_confirm(client, tracker, tx, commitment: "confirmed", timeout: 1_000)
+      {:ok, _signature} =
+        RPC.send_and_confirm(client, tracker, tx, commitment: "confirmed", timeout: 1_000)
 
       expected = amount + lamports
+
       assert {:ok, %{"lamports" => ^expected}} =
-        RPC.send(client, RPC.Request.get_account_info(Solana.pubkey!(new), request_opts))
+               RPC.send(client, RPC.Request.get_account_info(Solana.pubkey!(new), request_opts))
     end
   end
 

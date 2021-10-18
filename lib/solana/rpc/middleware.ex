@@ -42,9 +42,11 @@ defmodule Solana.RPC.Middleware do
   end
 
   defp decode_result({"getSignaturesForAddress", signature_responses}) do
-    responses = Enum.map(signature_responses, fn response ->
-      update_in(response, ["signature"], &B58.decode58!/1)
-    end)
+    responses =
+      Enum.map(signature_responses, fn response ->
+        update_in(response, ["signature"], &B58.decode58!/1)
+      end)
+
     {:ok, responses}
   end
 

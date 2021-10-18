@@ -33,7 +33,7 @@ defmodule Solana.SPL.Token do
   @doc """
   Translates the result of a `get_account_info` RPC API call into a `Token`.
   """
-  def from_account_info(%{"data" => %{"parsed" => %{"info" => info}}})  do
+  def from_account_info(%{"data" => %{"parsed" => %{"info" => info}}}) do
     %__MODULE__{
       native?: info["isNative"],
       mint: B58.decode58!(info["mint"]),

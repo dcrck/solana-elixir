@@ -28,7 +28,7 @@ defmodule Solana.RPC.Tracker do
 
     mapped_results = signatures |> Enum.zip(results) |> Enum.into(%{})
 
-    {_failed, not_failed} = 
+    {_failed, not_failed} =
       Enum.split_with(signatures, fn signature ->
         result = Map.get(mapped_results, signature)
         !is_nil(result) && !is_nil(result["err"])
@@ -48,7 +48,7 @@ defmodule Solana.RPC.Tracker do
 
   defp commitment_done?(%{"confirmationStatus" => "finalized"}, _), do: true
   defp commitment_done?(%{"confirmationStatus" => "confirmed"}, "finalized"), do: false
-  defp commitment_done?(%{"confirmationStatus" => "confirmed"}, _), do: true 
+  defp commitment_done?(%{"confirmationStatus" => "confirmed"}, _), do: true
   defp commitment_done?(%{"confirmationStatus" => "processed"}, "processed"), do: true
   defp commitment_done?(%{"confirmationStatus" => "processed"}, _), do: false
 end

@@ -48,17 +48,18 @@ defmodule Solana.SPL.TokenTest do
       opts = [commitment: "confirmed", timeout: 1_000]
       {:ok, _signatures} = RPC.send_and_confirm(global.client, global.tracker, tx, opts)
       opts = [commitment: "confirmed", encoding: "jsonParsed"]
+
       assert {:ok, token} =
-        RPC.send(global.client, RPC.Request.get_account_info(Solana.pubkey!(new), opts))
+               RPC.send(global.client, RPC.Request.get_account_info(Solana.pubkey!(new), opts))
 
       assert %Token{
-        owner: ^owner,
-        mint: ^mint,
-        initialized?: true,
-        frozen?: false,
-        native?: false,
-        amount: 0,
-      } = Token.from_account_info(token)
+               owner: ^owner,
+               mint: ^mint,
+               initialized?: true,
+               frozen?: false,
+               native?: false,
+               amount: 0
+             } = Token.from_account_info(token)
     end
   end
 
