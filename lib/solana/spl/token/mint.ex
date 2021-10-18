@@ -18,6 +18,9 @@ defmodule Solana.SPL.Token.Mint do
     initialized?: false
   ]
 
+  @doc """
+  Translates the result of a `get_account_info` RPC API call into a `Mint`.
+  """
   def from_account_info(%{"data" => %{"parsed" => %{"type" => "mint", "info" => info}}}) do
     mint = %__MODULE__{
       decimals: info["decimals"],
@@ -35,6 +38,9 @@ defmodule Solana.SPL.Token.Mint do
 
   def byte_size(), do: 82
 
+  @doc """
+  Genereates the instructions to initialize a `Mint`.
+  """
   def init(opts) do
     schema = [
       payer: [
