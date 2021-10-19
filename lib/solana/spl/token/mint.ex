@@ -18,6 +18,8 @@ defmodule Solana.SPL.Token.Mint do
     initialized?: false
   ]
 
+  def byte_size(), do: 82
+
   @doc """
   Translates the result of a `get_account_info` RPC API call into a `Mint`.
   """
@@ -36,8 +38,6 @@ defmodule Solana.SPL.Token.Mint do
   end
 
   def from_account_info(_), do: :error
-
-  def byte_size(), do: 82
 
   @doc """
   Genereates the instructions to initialize a `Mint`.

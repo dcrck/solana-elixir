@@ -30,6 +30,10 @@ defmodule Solana.SPL.Token do
     native?: false
   ]
 
+  def id(), do: Solana.pubkey!("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
+
+  def byte_size(), do: 165
+
   @doc """
   Translates the result of a `get_account_info` RPC API call into a `Token`.
   """
@@ -63,10 +67,6 @@ defmodule Solana.SPL.Token do
   end
 
   defp add_info(_, token), do: token
-
-  def id(), do: Solana.pubkey!("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
-
-  def byte_size(), do: 165
 
   @doc """
   Creates the instructions which initialize a new account to hold tokens.
