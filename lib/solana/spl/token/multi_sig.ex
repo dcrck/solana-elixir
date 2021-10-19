@@ -12,18 +12,40 @@ defmodule Solana.SPL.Token.MultiSig do
   import Solana.Helpers
 
   @type t :: %__MODULE__{
-          m: byte,
-          n: byte,
+          signers_required: byte,
+          signers_total: byte,
           initialized?: boolean,
           signers: [Solana.key()]
         }
 
-  defstruct m: 1,
-            n: 1,
+  defstruct signers_required: 1,
+            signers_total: 1,
             initialized?: false,
             signers: []
 
   def byte_size(), do: 355
+
+  def from_account_info(%{"data" => %{"parsed" => %{"info" => info}}}) do
+    from_multisig_account_info(info)
+  end
+
+  def from_account_info(_), do: :error
+
+  defp from_multisig_account_info(%{
+         "isInitialized" => initialized?,
+         "numRequiredSigners" => signers_required,
+         "numValidSigners" => signers_total,
+         "signers" => signers
+       }) do
+    %__MODULE__{
+      signers_required: signers_required,
+      signers_total: signers_total,
+      initialized?: initialized?,
+      signers: Enum.map(signers, &B58.decode58!/1)
+    }
+  end
+
+  defp from_multisig_account_info(_), do: :error
 
   @doc """
   Creates the instructions to initialize a multisignature account with N
@@ -47,10 +69,10 @@ defmodule Solana.SPL.Token.MultiSig do
         required: true,
         doc: "The full set of signers"
       ],
-      m: [
+      signatures_required: [
         type: {:in, 1..11},
         required: true,
-        doc: "number of required signatures"
+        doc: "number of signatures required"
       ],
       new: [
         type: {:custom, Solana.Key, :check, []},
@@ -62,13 +84,13 @@ defmodule Solana.SPL.Token.MultiSig do
     case validate(opts, schema) do
       {:ok, params} ->
         [
-          SystemProgram.create_account(%{
+          SystemProgram.create_account(
             lamports: params.balance,
             space: byte_size(),
             from: params.payer,
             new: params.new,
             program_id: Token.id()
-          }),
+          ),
           initialize_ix(params)
         ]
 
@@ -85,7 +107,7 @@ defmodule Solana.SPL.Token.MultiSig do
         %Account{key: Solana.rent()}
         | Enum.map(params.signers, &%Account{key: &1})
       ],
-      data: Instruction.encode_data([2, params.m])
+      data: Instruction.encode_data([2, params.signatures_required])
     }
   end
 end
