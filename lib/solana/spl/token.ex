@@ -38,17 +38,29 @@ defmodule Solana.SPL.Token do
   Translates the result of a `get_account_info` RPC API call into a `Token`.
   """
   def from_account_info(%{"data" => %{"parsed" => %{"info" => info}}}) do
-    token = %__MODULE__{
-      native?: info["isNative"],
-      mint: B58.decode58!(info["mint"]),
-      owner: B58.decode58!(info["owner"]),
-      amount: String.to_integer(get_in(info, ["tokenAmount", "amount"]))
-    }
-
-    Enum.reduce(info, token, &add_info/2)
+    case from_token_account_info(info) do
+      :error -> :error
+      token -> Enum.reduce(info, token, &add_info/2)
+    end
   end
 
   def from_account_info(_), do: :error
+
+  defp from_token_account_info(%{
+         "isNative" => native?,
+         "mint" => mint,
+         "owner" => owner,
+         "tokenAmount" => %{"amount" => amount}
+       }) do
+    %__MODULE__{
+      native?: native?,
+      mint: B58.decode58!(mint),
+      owner: B58.decode58!(owner),
+      amount: String.to_integer(amount)
+    }
+  end
+
+  defp from_token_account_info(_), do: :error
 
   defp add_info({"state", "initialized"}, token) do
     %{token | initialized?: true}

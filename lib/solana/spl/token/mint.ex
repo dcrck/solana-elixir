@@ -24,20 +24,30 @@ defmodule Solana.SPL.Token.Mint do
   Translates the result of a `get_account_info` RPC API call into a `Mint`.
   """
   def from_account_info(%{"data" => %{"parsed" => %{"type" => "mint", "info" => info}}}) do
-    mint = %__MODULE__{
-      decimals: info["decimals"],
-      authority: B58.decode58!(info["mintAuthority"]),
-      initialized?: info["isInitialized"],
-      supply: String.to_integer(info["supply"])
-    }
-
-    case info["freezeAuthority"] do
-      nil -> mint
-      authority -> %{mint | freeze_authority: B58.decode58!(authority)}
+    case {from_mint_account_info(info), info["freezeAuthority"]} do
+      {:error, _} -> :error
+      {mint, nil} -> mint
+      {mint, authority} -> %{mint | freeze_authority: B58.decode58!(authority)}
     end
   end
 
   def from_account_info(_), do: :error
+
+  defp from_mint_account_info(%{
+         "supply" => supply,
+         "isInitialized" => initialized?,
+         "mintAuthority" => authority,
+         "decimals" => decimals
+       }) do
+    %__MODULE__{
+      decimals: decimals,
+      authority: B58.decode58!(authority),
+      initialized?: initialized?,
+      supply: String.to_integer(supply)
+    }
+  end
+
+  defp from_mint_account_info(_), do: :error
 
   @doc """
   Genereates the instructions to initialize a `Mint`.
