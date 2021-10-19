@@ -34,20 +34,35 @@ defmodule Solana.SPL.Token do
   Translates the result of a `get_account_info` RPC API call into a `Token`.
   """
   def from_account_info(%{"data" => %{"parsed" => %{"info" => info}}}) do
-    %__MODULE__{
+    token = %__MODULE__{
       native?: info["isNative"],
       mint: B58.decode58!(info["mint"]),
       owner: B58.decode58!(info["owner"]),
       amount: String.to_integer(get_in(info, ["tokenAmount", "amount"]))
     }
-    |> add_state(info)
+
+    Enum.reduce(info, token, &add_info/2)
   end
 
   def from_account_info(_), do: :error
 
-  defp add_state(token, %{"state" => "initialized"}) do
+  defp add_info({"state", "initialized"}, token) do
     %{token | initialized?: true}
   end
+
+  defp add_info({"state", "frozen"}, token) do
+    %{token | initialized?: true, frozen?: true}
+  end
+
+  defp add_info({"delegate", delegate}, token) do
+    %{token | delegate: B58.decode58!(delegate)}
+  end
+
+  defp add_info({"delegatedAmount", %{"amount" => amount}}, token) do
+    %{token | delegated_amount: String.to_integer(amount)}
+  end
+
+  defp add_info(_, token), do: token
 
   def id(), do: Solana.pubkey!("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
 
@@ -448,7 +463,7 @@ defmodule Solana.SPL.Token do
     %{ix | data: Instruction.encode_data([14, {amount, 64}, decimals])}
   end
 
-  defp add_mint_to_data(ix, %{checked: false, amount: amount}) do
+  defp add_mint_to_data(ix, %{checked?: false, amount: amount}) do
     %{ix | data: Instruction.encode_data([7, {amount, 64}])}
   end
 
@@ -521,7 +536,7 @@ defmodule Solana.SPL.Token do
     %{ix | data: Instruction.encode_data([15, {amount, 64}, decimals])}
   end
 
-  defp add_burn_data(ix, %{checked: false, amount: amount}) do
+  defp add_burn_data(ix, %{checked?: false, amount: amount}) do
     %{ix | data: Instruction.encode_data([8, {amount, 64}])}
   end
 

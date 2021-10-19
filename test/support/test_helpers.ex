@@ -19,4 +19,8 @@ defmodule Solana.TestHelpers do
       timeout -> {:error, :timeout}
     end
   end
+
+  def keypairs(n) do
+    Enum.map(1..n, fn _ -> Solana.keypair() end)
+  end
 end

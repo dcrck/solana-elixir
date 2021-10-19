@@ -3,7 +3,7 @@ defmodule Solana.SPL.Token.MintTest do
 
   import Solana.TestHelpers, only: [create_payer: 3]
 
-  alias Solana.{Transaction, RPC, SPL.Token, SystemProgram}
+  alias Solana.{Transaction, RPC, SPL.Token}
 
   setup_all do
     {:ok, tracker} = RPC.Tracker.start_link(network: "localhost", t: 100)
