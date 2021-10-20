@@ -36,9 +36,7 @@ defmodule Solana.Transaction do
   def to_binary(%__MODULE__{instructions: []}), do: {:error, :no_instructions}
 
   def to_binary(tx = %__MODULE__{instructions: ixs, signers: signers}) do
-    ixs = List.flatten(ixs)
-
-    with nil <- Enum.find_index(ixs, &is_nil(&1.program)),
+    with {:ok, ixs} <- check_instructions(List.flatten(ixs)),
          accounts = compile_accounts(ixs, tx.payer),
          true <- signers_match?(accounts, signers) do
       message = encode_message(accounts, tx.blockhash, ixs)
@@ -51,13 +49,27 @@ defmodule Solana.Transaction do
 
       {:ok, :erlang.list_to_binary([signatures, message])}
     else
-      idx when is_integer(idx) ->
+      {:error, :no_program, idx} ->
         Logger.error("Missing program id on instruction at index #{idx}")
         {:error, :no_program}
+
+      {:error, message, idx} ->
+        Logger.error("error compiling instruction at index #{idx}: #{inspect message}")
+        {:error, message}
 
       false ->
         {:error, :mismatched_signers}
     end
+  end
+
+  defp check_instructions(ixs) do
+    ixs
+    |> Enum.with_index()
+    |> Enum.reduce_while({:ok, ixs}, fn
+      {{:error, message}, idx}, _ -> {:halt, {:error, message, idx}}
+      {%{program: nil}, idx}, _ -> {:halt, {:error, :no_program, idx}}
+      _, acc -> {:cont, acc}
+    end)
   end
 
   defp compile_accounts(ixs, payer) do
