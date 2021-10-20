@@ -14,6 +14,7 @@ defmodule Solana.SPL.AssociatedTokenTest do
 
     [tracker: tracker, client: client, payer: payer]
   end
+
   describe "find_address/2" do
     test "fails if the owner is invalid" do
       assert :error =
@@ -47,8 +48,7 @@ defmodule Solana.SPL.AssociatedTokenTest do
         RPC.Request.get_recent_blockhash(commitment: "confirmed")
       ]
 
-      [{:ok, balance}, {:ok, %{"blockhash" => blockhash}}] =
-        RPC.send(client, tx_reqs)
+      [{:ok, balance}, {:ok, %{"blockhash" => blockhash}}] = RPC.send(client, tx_reqs)
 
       tx = %Transaction{
         instructions: [

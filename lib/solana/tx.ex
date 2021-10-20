@@ -54,7 +54,7 @@ defmodule Solana.Transaction do
         {:error, :no_program}
 
       {:error, message, idx} ->
-        Logger.error("error compiling instruction at index #{idx}: #{inspect message}")
+        Logger.error("error compiling instruction at index #{idx}: #{inspect(message)}")
         {:error, message}
 
       false ->

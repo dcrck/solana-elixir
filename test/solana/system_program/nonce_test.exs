@@ -5,7 +5,7 @@ defmodule Solana.SystemProgram.NonceTest do
   import Solana, only: [pubkey!: 1]
 
   alias Solana.{SystemProgram, RPC, Transaction}
-  
+
   setup_all do
     {:ok, tracker} = RPC.Tracker.start_link(network: "localhost", t: 100)
     client = Solana.rpc_client(network: "localhost")
@@ -49,12 +49,22 @@ defmodule Solana.SystemProgram.NonceTest do
         RPC.send_and_confirm(client, tracker, tx, commitment: "confirmed", timeout: 1_000)
 
       assert {:ok, %{}} =
-               RPC.send(client, RPC.Request.get_account_info(pubkey!(new), commitment: "confirmed", encoding: "jsonParsed"))
+               RPC.send(
+                 client,
+                 RPC.Request.get_account_info(pubkey!(new),
+                   commitment: "confirmed",
+                   encoding: "jsonParsed"
+                 )
+               )
     end
   end
 
   describe "authorize/1" do
-    test "can set a new authority for a nonce account", %{tracker: tracker, client: client, payer: payer} do
+    test "can set a new authority for a nonce account", %{
+      tracker: tracker,
+      client: client,
+      payer: payer
+    } do
       [new, auth] = keypairs(2)
       space = SystemProgram.Nonce.byte_size()
 
@@ -93,7 +103,13 @@ defmodule Solana.SystemProgram.NonceTest do
         RPC.send_and_confirm(client, tracker, tx, commitment: "confirmed", timeout: 1_000)
 
       {:ok, account_info} =
-        RPC.send(client, RPC.Request.get_account_info(pubkey!(new), commitment: "confirmed", encoding: "jsonParsed"))
+        RPC.send(
+          client,
+          RPC.Request.get_account_info(pubkey!(new),
+            commitment: "confirmed",
+            encoding: "jsonParsed"
+          )
+        )
 
       %{authority: authority} = SystemProgram.Nonce.from_account_info(account_info)
 
@@ -135,7 +151,14 @@ defmodule Solana.SystemProgram.NonceTest do
       {:ok, _signature} =
         RPC.send_and_confirm(client, tracker, tx, commitment: "confirmed", timeout: 1_000)
 
-      {:ok, info} = RPC.send(client, RPC.Request.get_account_info(pubkey!(new), commitment: "confirmed", encoding: "jsonParsed"))
+      {:ok, info} =
+        RPC.send(
+          client,
+          RPC.Request.get_account_info(pubkey!(new),
+            commitment: "confirmed",
+            encoding: "jsonParsed"
+          )
+        )
 
       tx = %Transaction{
         instructions: [
@@ -152,15 +175,26 @@ defmodule Solana.SystemProgram.NonceTest do
       {:ok, _signature} =
         RPC.send_and_confirm(client, tracker, tx, commitment: "confirmed", timeout: 1_000)
 
-      {:ok, info2} = RPC.send(client, RPC.Request.get_account_info(pubkey!(new), commitment: "confirmed", encoding: "jsonParsed"))
+      {:ok, info2} =
+        RPC.send(
+          client,
+          RPC.Request.get_account_info(pubkey!(new),
+            commitment: "confirmed",
+            encoding: "jsonParsed"
+          )
+        )
 
       assert Map.get(SystemProgram.Nonce.from_account_info(info), :blockhash) !=
-        Map.get(SystemProgram.Nonce.from_account_info(info2), :blockhash)
+               Map.get(SystemProgram.Nonce.from_account_info(info2), :blockhash)
     end
   end
 
   describe "withdraw/1" do
-    test "can withdraw lamports from a nonce account", %{tracker: tracker, client: client, payer: payer} do
+    test "can withdraw lamports from a nonce account", %{
+      tracker: tracker,
+      client: client,
+      payer: payer
+    } do
       new = Solana.keypair()
       space = SystemProgram.Nonce.byte_size()
 
@@ -198,7 +232,15 @@ defmodule Solana.SystemProgram.NonceTest do
       {:ok, _signature} =
         RPC.send_and_confirm(client, tracker, tx, commitment: "confirmed", timeout: 1_000)
 
-      {:ok, info} = RPC.send(client, RPC.Request.get_account_info(pubkey!(new), commitment: "confirmed", encoding: "jsonParsed"))
+      {:ok, info} =
+        RPC.send(
+          client,
+          RPC.Request.get_account_info(pubkey!(new),
+            commitment: "confirmed",
+            encoding: "jsonParsed"
+          )
+        )
+
       assert info["lamports"] == div(Solana.lamports_per_sol(), 2)
     end
   end

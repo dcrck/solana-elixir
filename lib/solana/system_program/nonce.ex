@@ -10,7 +10,11 @@ defmodule Solana.SystemProgram.Nonce do
 
   def from_account_info(_), do: :error
 
-  defp from_nonce_account_info(%{"authority" => authority, "blockhash" => blockhash, "feeCalculator" => calculator}) do
+  defp from_nonce_account_info(%{
+         "authority" => authority,
+         "blockhash" => blockhash,
+         "feeCalculator" => calculator
+       }) do
     %{
       authority: Solana.pubkey!(authority),
       blockhash: B58.decode58!(blockhash),
@@ -159,5 +163,4 @@ defmodule Solana.SystemProgram.Nonce do
         error
     end
   end
-
 end

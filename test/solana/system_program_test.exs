@@ -87,12 +87,22 @@ defmodule Solana.SystemProgramTest do
       expected = 1000 + lamports
 
       assert {:ok, %{"lamports" => ^expected}} =
-               RPC.send(client, RPC.Request.get_account_info(pubkey!(new), commitment: "confirmed", encoding: "jsonParsed"))
+               RPC.send(
+                 client,
+                 RPC.Request.get_account_info(pubkey!(new),
+                   commitment: "confirmed",
+                   encoding: "jsonParsed"
+                 )
+               )
     end
   end
 
   describe "assign/1" do
-    test "can assign a new program ID to an account", %{tracker: tracker, client: client, payer: payer} do
+    test "can assign a new program ID to an account", %{
+      tracker: tracker,
+      client: client,
+      payer: payer
+    } do
       new = Solana.keypair()
       space = 0
 
@@ -125,7 +135,14 @@ defmodule Solana.SystemProgramTest do
       {:ok, _signature} =
         RPC.send_and_confirm(client, tracker, tx, commitment: "confirmed", timeout: 1_000)
 
-      {:ok, account_info} = RPC.send(client, RPC.Request.get_account_info(pubkey!(new), commitment: "confirmed", encoding: "jsonParsed"))
+      {:ok, account_info} =
+        RPC.send(
+          client,
+          RPC.Request.get_account_info(pubkey!(new),
+            commitment: "confirmed",
+            encoding: "jsonParsed"
+          )
+        )
 
       assert pubkey!(account_info["owner"]) == Solana.SPL.Token.id()
     end
@@ -167,7 +184,13 @@ defmodule Solana.SystemProgramTest do
         RPC.send_and_confirm(client, tracker, tx, commitment: "confirmed", timeout: 1_000)
 
       {:ok, %{"data" => [data, "base64"]}} =
-        RPC.send(client, RPC.Request.get_account_info(pubkey!(new), commitment: "confirmed", encoding: "jsonParsed"))
+        RPC.send(
+          client,
+          RPC.Request.get_account_info(pubkey!(new),
+            commitment: "confirmed",
+            encoding: "jsonParsed"
+          )
+        )
 
       assert byte_size(Base.decode64!(data)) == new_space
     end
