@@ -101,7 +101,7 @@ defmodule Solana.SystemProgram do
 
   def assign(opts) do
     schema = [
-      key: [
+      account: [
         type: {:custom, Solana.Key, :check, []},
         required: true,
         doc: "Public key for the account which will receive a new owner"
@@ -137,7 +137,7 @@ defmodule Solana.SystemProgram do
 
   def allocate(opts) do
     schema = [
-      key: [
+      account: [
         type: {:custom, Solana.Key, :check, []},
         required: true,
         doc: "Public key for the account to allocate"
@@ -169,146 +169,6 @@ defmodule Solana.SystemProgram do
           &allocate_with_seed_ix/1,
           [:base, :seed]
         )
-
-      error ->
-        error
-    end
-  end
-
-  def nonce_initialize(opts) do
-    schema = [
-      nonce: [
-        type: {:custom, Solana.Key, :check, []},
-        required: true,
-        doc: "Public key of the nonce account"
-      ],
-      authority: [
-        type: {:custom, Solana.Key, :check, []},
-        required: true,
-        doc: "Public key of the nonce authority"
-      ]
-    ]
-
-    case validate(opts, schema) do
-      {:ok, params} ->
-        %Instruction{
-          program: id(),
-          accounts: [
-            %Account{key: params.nonce, writable?: true},
-            %Account{key: Solana.recent_blockhashes()},
-            %Account{key: Solana.rent()}
-          ],
-          data: Instruction.encode_data([{6, 32}, params.authority])
-        }
-
-      error ->
-        error
-    end
-  end
-
-  def nonce_authorize(opts) do
-    schema = [
-      nonce: [
-        type: {:custom, Solana.Key, :check, []},
-        required: true,
-        doc: "Public key of the nonce account"
-      ],
-      authority: [
-        type: {:custom, Solana.Key, :check, []},
-        required: true,
-        doc: "Public key of the nonce authority"
-      ],
-      new_authority: [
-        type: {:custom, Solana.Key, :check, []},
-        required: true,
-        doc: "Public key to set as the new nonce authority"
-      ]
-    ]
-
-    case validate(opts, schema) do
-      {:ok, params} ->
-        %Instruction{
-          program: id(),
-          accounts: [
-            %Account{key: params.nonce, writable?: true},
-            %Account{key: params.authority, signer?: true}
-          ],
-          data: Instruction.encode_data([{7, 32}, params.new_authority])
-        }
-
-      error ->
-        error
-    end
-  end
-
-  def nonce_advance(opts) do
-    schema = [
-      nonce: [
-        type: {:custom, Solana.Key, :check, []},
-        required: true,
-        doc: "Public key of the nonce account"
-      ],
-      authority: [
-        type: {:custom, Solana.Key, :check, []},
-        required: true,
-        doc: "Public key of the nonce authority"
-      ]
-    ]
-
-    case validate(opts, schema) do
-      {:ok, params} ->
-        %Instruction{
-          program: id(),
-          accounts: [
-            %Account{key: params.nonce, writable?: true},
-            %Account{key: Solana.recent_blockhashes()},
-            %Account{key: params.authority, signer?: true}
-          ],
-          data: Instruction.encode_data([{4, 32}])
-        }
-
-      error ->
-        error
-    end
-  end
-
-  def nonce_withdraw(opts) do
-    schema = [
-      nonce: [
-        type: {:custom, Solana.Key, :check, []},
-        required: true,
-        doc: "Public key of the nonce account"
-      ],
-      authority: [
-        type: {:custom, Solana.Key, :check, []},
-        required: true,
-        doc: "Public key of the nonce authority"
-      ],
-      to: [
-        type: {:custom, Solana.Key, :check, []},
-        required: true,
-        doc: "Public key of the account which will get the withdrawn lamports"
-      ],
-      lamports: [
-        type: :pos_integer,
-        required: true,
-        doc: "Amount of lamports to transfer to the created account"
-      ]
-    ]
-
-    case validate(opts, schema) do
-      {:ok, params} ->
-        %Instruction{
-          program: id(),
-          accounts: [
-            %Account{key: params.nonce, writable?: true},
-            %Account{key: params.to, writable?: true},
-            %Account{key: Solana.recent_blockhashes()},
-            %Account{key: Solana.rent()},
-            %Account{key: params.authority, signer?: true}
-          ],
-          data: Instruction.encode_data([{5, 32}, {params.lamports, 64}])
-        }
 
       error ->
         error
@@ -406,7 +266,7 @@ defmodule Solana.SystemProgram do
     %Instruction{
       program: id(),
       accounts: [
-        %Account{key: params.key, signer?: true, writable?: true}
+        %Account{key: params.account, signer?: true, writable?: true}
       ],
       data: Instruction.encode_data([{1, 32}, params.program_id])
     }
@@ -416,7 +276,7 @@ defmodule Solana.SystemProgram do
     %Instruction{
       program: id(),
       accounts: [
-        %Account{key: params.key, writable?: true},
+        %Account{key: params.account, writable?: true},
         %Account{key: params.base, signer?: true}
       ],
       data:
@@ -433,9 +293,9 @@ defmodule Solana.SystemProgram do
     %Instruction{
       program: id(),
       accounts: [
-        %Account{key: params.key, signer?: true, writable?: true}
+        %Account{key: params.account, signer?: true, writable?: true}
       ],
-      data: Instruction.encode_data([{8, 32}, params.space])
+      data: Instruction.encode_data([{8, 32}, {params.space, 64}])
     }
   end
 
@@ -443,7 +303,7 @@ defmodule Solana.SystemProgram do
     %Instruction{
       program: id(),
       accounts: [
-        %Account{key: params.key, writable?: true},
+        %Account{key: params.account, writable?: true},
         %Account{key: params.base, signer?: true}
       ],
       data:

@@ -2,6 +2,7 @@ defmodule Solana.SystemProgramTest do
   use ExUnit.Case, async: true
 
   import Solana.TestHelpers, only: [create_payer: 3]
+  import Solana, only: [pubkey!: 1]
 
   alias Solana.{SystemProgram, RPC, Transaction}
 
@@ -31,31 +32,31 @@ defmodule Solana.SystemProgramTest do
             lamports: lamports,
             space: 0,
             program_id: SystemProgram.id(),
-            from: Solana.pubkey!(payer),
-            new: Solana.pubkey!(new)
+            from: pubkey!(payer),
+            new: pubkey!(new)
           )
         ],
         signers: [payer, new],
         blockhash: blockhash,
-        payer: Solana.pubkey!(payer)
+        payer: pubkey!(payer)
       }
 
       {:ok, _signature} =
         RPC.send_and_confirm(client, tracker, tx, commitment: "confirmed", timeout: 1_000)
 
       assert {:ok, %{"lamports" => ^lamports}} =
-               RPC.send(client, RPC.Request.get_account_info(Solana.pubkey!(new), request_opts))
+               RPC.send(client, RPC.Request.get_account_info(pubkey!(new), request_opts))
     end
   end
 
   describe "transfer/1" do
-    test "can create account", %{tracker: tracker, client: client, payer: payer} do
+    test "can transfer lamports to an account", %{tracker: tracker, client: client, payer: payer} do
       new = Solana.keypair()
-      request_opts = [commitment: "confirmed"]
+      space = 0
 
       tx_reqs = [
-        RPC.Request.get_minimum_balance_for_rent_exemption(0, request_opts),
-        RPC.Request.get_recent_blockhash(request_opts)
+        RPC.Request.get_minimum_balance_for_rent_exemption(space, commitment: "confirmed"),
+        RPC.Request.get_recent_blockhash(commitment: "confirmed")
       ]
 
       [{:ok, lamports}, {:ok, %{"blockhash" => blockhash}}] = RPC.send(client, tx_reqs)
@@ -64,65 +65,111 @@ defmodule Solana.SystemProgramTest do
         instructions: [
           SystemProgram.create_account(
             lamports: lamports,
-            space: 0,
+            space: space,
             program_id: SystemProgram.id(),
-            from: Solana.pubkey!(payer),
-            new: Solana.pubkey!(new)
+            from: pubkey!(payer),
+            new: pubkey!(new)
+          ),
+          SystemProgram.transfer(
+            lamports: 1_000,
+            from: pubkey!(payer),
+            to: pubkey!(new)
           )
         ],
         signers: [payer, new],
         blockhash: blockhash,
-        payer: Solana.pubkey!(payer)
+        payer: pubkey!(payer)
       }
 
       {:ok, _signature} =
         RPC.send_and_confirm(client, tracker, tx, commitment: "confirmed", timeout: 1_000)
 
-      amount = 1_000
-
-      tx = %{
-        tx
-        | instructions: [
-            SystemProgram.transfer(
-              lamports: amount,
-              from: Solana.pubkey!(payer),
-              to: Solana.pubkey!(new)
-            )
-          ],
-          signers: [payer]
-      }
-
-      {:ok, _signature} =
-        RPC.send_and_confirm(client, tracker, tx, commitment: "confirmed", timeout: 1_000)
-
-      expected = amount + lamports
+      expected = 1000 + lamports
 
       assert {:ok, %{"lamports" => ^expected}} =
-               RPC.send(client, RPC.Request.get_account_info(Solana.pubkey!(new), request_opts))
+               RPC.send(client, RPC.Request.get_account_info(pubkey!(new), commitment: "confirmed", encoding: "jsonParsed"))
     end
   end
 
-  # TODO: add assign/1 tests here
   describe "assign/1" do
+    test "can assign a new program ID to an account", %{tracker: tracker, client: client, payer: payer} do
+      new = Solana.keypair()
+      space = 0
+
+      tx_reqs = [
+        RPC.Request.get_minimum_balance_for_rent_exemption(space, commitment: "confirmed"),
+        RPC.Request.get_recent_blockhash(commitment: "confirmed")
+      ]
+
+      [{:ok, lamports}, {:ok, %{"blockhash" => blockhash}}] = RPC.send(client, tx_reqs)
+
+      tx = %Transaction{
+        instructions: [
+          SystemProgram.create_account(
+            lamports: lamports,
+            space: space,
+            program_id: SystemProgram.id(),
+            from: pubkey!(payer),
+            new: pubkey!(new)
+          ),
+          SystemProgram.assign(
+            account: pubkey!(new),
+            program_id: Solana.SPL.Token.id()
+          )
+        ],
+        signers: [payer, new],
+        blockhash: blockhash,
+        payer: pubkey!(payer)
+      }
+
+      {:ok, _signature} =
+        RPC.send_and_confirm(client, tracker, tx, commitment: "confirmed", timeout: 1_000)
+
+      {:ok, account_info} = RPC.send(client, RPC.Request.get_account_info(pubkey!(new), commitment: "confirmed", encoding: "jsonParsed"))
+
+      assert pubkey!(account_info["owner"]) == Solana.SPL.Token.id()
+    end
   end
 
-  # TODO: add allocate/1 tests here
   describe "allocate/1" do
-  end
+    test "can allocate space to an account", %{tracker: tracker, client: client, payer: payer} do
+      new = Solana.keypair()
+      space = 0
+      new_space = 10
 
-  # TODO: add nonce_initialize/1 tests here
-  describe "nonce_initialize/1" do
-  end
+      tx_reqs = [
+        RPC.Request.get_minimum_balance_for_rent_exemption(new_space, commitment: "confirmed"),
+        RPC.Request.get_recent_blockhash(commitment: "confirmed")
+      ]
 
-  # TODO: add nonce_authorize/1 tests here
-  describe "nonce_authorize/1" do
-  end
+      [{:ok, lamports}, {:ok, %{"blockhash" => blockhash}}] = RPC.send(client, tx_reqs)
 
-  # TODO: add nonce_advance/1 tests here
-  describe "nonce_advance/1" do
-  end
+      tx = %Transaction{
+        instructions: [
+          SystemProgram.create_account(
+            lamports: lamports,
+            space: space,
+            program_id: SystemProgram.id(),
+            from: pubkey!(payer),
+            new: pubkey!(new)
+          ),
+          SystemProgram.allocate(
+            account: pubkey!(new),
+            space: new_space
+          )
+        ],
+        signers: [payer, new],
+        blockhash: blockhash,
+        payer: pubkey!(payer)
+      }
 
-  # TODO: add nonce_withdraw/1 tests here
-  describe "nonce_withdraw/1" do
+      {:ok, _signature} =
+        RPC.send_and_confirm(client, tracker, tx, commitment: "confirmed", timeout: 1_000)
+
+      {:ok, %{"data" => [data, "base64"]}} =
+        RPC.send(client, RPC.Request.get_account_info(pubkey!(new), commitment: "confirmed", encoding: "jsonParsed"))
+
+      assert byte_size(Base.decode64!(data)) == new_space
+    end
   end
 end
