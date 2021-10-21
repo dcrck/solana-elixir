@@ -15,7 +15,8 @@ defmodule Solana.SPL.AssociatedToken do
   def id(), do: Solana.pubkey!("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL")
 
   @doc """
-  Find the token account address associated with a given owner and mint
+  Finds the token account address associated with a given owner and mint. This
+  address will be unique to the mint/owner combination.
   """
   @spec find_address(mint :: Solana.key(), owner :: Solana.key()) :: {:ok, Solana.key()} | :error
   def find_address(mint, owner) do
@@ -27,31 +28,39 @@ defmodule Solana.SPL.AssociatedToken do
     end
   end
 
-  def create_account(opts) do
-    schema = [
-      payer: [
-        type: {:custom, Solana.Key, :check, []},
-        required: true,
-        doc: "The account which will pay for the `new` account's creation"
-      ],
-      owner: [
-        type: {:custom, Solana.Key, :check, []},
-        required: true,
-        doc: "The account which will own the `new` account"
-      ],
-      new: [
-        type: {:custom, Solana.Key, :check, []},
-        required: true,
-        doc: "Public key of the associated token account to create"
-      ],
-      mint: [
-        type: {:custom, Solana.Key, :check, []},
-        required: true,
-        doc: "The mint of the `new` account"
-      ]
+  @create_account_schema [
+    payer: [
+      type: {:custom, Solana.Key, :check, []},
+      required: true,
+      doc: "The account which will pay for the `new` account's creation"
+    ],
+    owner: [
+      type: {:custom, Solana.Key, :check, []},
+      required: true,
+      doc: "The account which will own the `new` account"
+    ],
+    new: [
+      type: {:custom, Solana.Key, :check, []},
+      required: true,
+      doc: "Public key of the associated token account to create"
+    ],
+    mint: [
+      type: {:custom, Solana.Key, :check, []},
+      required: true,
+      doc: "The mint of the `new` account"
     ]
+  ]
 
-    case validate(opts, schema) do
+  @doc """
+  Creates an associated token account. This will be owned by the `owner`
+  regardless of who actually creates it.
+
+  ## Options
+
+  #{NimbleOptions.docs(@create_account_schema)}
+  """
+  def create_account(opts) do
+    case validate(opts, @create_account_schema) do
       {:ok, params} ->
         %Instruction{
           program: id(),
