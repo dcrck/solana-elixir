@@ -2,6 +2,7 @@ defmodule Solana.CompactArray do
   @moduledoc false
   use Bitwise, skip_operators: true
 
+  # https://docs.solana.com/developing/programming-model/transactions#compact-array-format
   @spec to_iolist(arr :: iolist | nil) :: iolist
   def to_iolist(nil), do: []
 

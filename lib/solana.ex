@@ -37,7 +37,7 @@ defmodule Solana do
   defdelegate pubkey!(encoded), to: Solana.Key, as: :decode!
 
   @doc """
-  Calls `Solana.RPC.client` with the list of `options` turned into a map.
+  Calls `Solana.RPC.client/1` with the list of `options` turned into a map.
   """
   @spec rpc_client(options :: keyword) :: Tesla.Client.t()
   def rpc_client(config), do: Solana.RPC.client(Enum.into(config, %{}))

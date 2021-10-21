@@ -1,14 +1,24 @@
 defmodule Solana.Transaction do
+  @moduledoc """
+  Functions for building and encoding Solana
+  [Transactions](https://docs.solana.com/developing/programming-model/transactions)
+  """
   require Logger
-  alias Solana.{Account, CompactArray}
+  alias Solana.{Account, CompactArray, Instruction}
 
+  @typedoc """
+  All the details needed to encode a transaction.
+  """
   @type t :: %__MODULE__{
           payer: Solana.key() | nil,
           blockhash: binary | nil,
-          instructions: [Solana.Instruction.t()],
+          instructions: [Instruction.t()],
           signers: [Solana.keypair()]
         }
 
+  @typedoc """
+  The possible errors encountered when encoding a transaction.
+  """
   @type encoding_err ::
           :no_payer
           | :no_blockhash
@@ -24,12 +34,21 @@ defmodule Solana.Transaction do
   ]
 
   @doc """
-  Checks to see if a signature is valid
+  Checks to see if a transaction's signature is valid. Returns `{:ok,
+  signature}` if it is, and an error tuple if it isn't.
   """
   @spec check(binary) :: {:ok, binary} | {:error, :invalid_signature}
   def check(<<signature::binary-64>>), do: {:ok, signature}
   def check(_), do: {:error, :invalid_signature}
 
+  @doc """
+  Encodes a `t:Solana.Transaction.t` into a [binary
+  format](https://docs.solana.com/developing/programming-model/transactions#anatomy-of-a-transaction)
+
+  Returns `{:ok, encoded_transaction}` if the transaction was successfully
+  encoded, or an error tuple if the encoding failed -- plus more error details
+  via `Logger.error/1`.
+  """
   @spec to_binary(tx :: t) :: {:ok, binary()} | {:error, encoding_err()}
   def to_binary(%__MODULE__{payer: nil}), do: {:error, :no_payer}
   def to_binary(%__MODULE__{blockhash: nil}), do: {:error, :no_blockhash}
@@ -72,6 +91,7 @@ defmodule Solana.Transaction do
     end)
   end
 
+  # https://docs.solana.com/developing/programming-model/transactions#account-addresses-format
   defp compile_accounts(ixs, payer) do
     ixs
     |> Enum.map(fn ix -> [%Account{key: ix.program} | ix.accounts] end)
@@ -94,6 +114,7 @@ defmodule Solana.Transaction do
     |> MapSet.equal?(expected)
   end
 
+  # https://docs.solana.com/developing/programming-model/transactions#message-format
   defp encode_message(accounts, blockhash, ixs) do
     [
       create_header(accounts),
@@ -104,6 +125,7 @@ defmodule Solana.Transaction do
     |> :erlang.list_to_binary()
   end
 
+  # https://docs.solana.com/developing/programming-model/transactions#message-header-format
   defp create_header(accounts) do
     accounts
     |> Enum.reduce(
@@ -119,14 +141,15 @@ defmodule Solana.Transaction do
 
   defp unary(result?), do: if(result?, do: 1, else: 0)
 
+  # https://docs.solana.com/developing/programming-model/transactions#instruction-format
   defp encode_instructions(ixs, accounts) do
-    account_idxs = index_accounts(accounts)
+    idxs = index_accounts(accounts)
 
-    Enum.map(ixs, fn %{accounts: accounts, program: program, data: data} ->
+    Enum.map(ixs, fn ix = %Instruction{} ->
       [
-        Map.get(account_idxs, program),
-        CompactArray.to_iolist(Enum.map(accounts, &Map.get(account_idxs, &1.key))),
-        CompactArray.to_iolist(data)
+        Map.get(idxs, ix.program),
+        CompactArray.to_iolist(Enum.map(ix.accounts, &Map.get(idxs, &1.key))),
+        CompactArray.to_iolist(ix.data)
       ]
     end)
   end
