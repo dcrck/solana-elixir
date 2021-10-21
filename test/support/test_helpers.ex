@@ -1,6 +1,15 @@
 defmodule Solana.TestHelpers do
+  @moduledoc """
+  Some helper functions for testing Solana programs.
+  """
   alias Solana.RPC
 
+  @doc """
+  Creates an account and airdrops some SOL to it. This is useful when creating
+  other accounts and you need an account to pay the rent fees.
+  """
+  @spec create_payer(tracker :: pid, Tesla.Client.t(), keyword) ::
+          {:ok, Solana.keypair()} | {:error, :timeout}
   def create_payer(tracker, client, opts \\ []) do
     payer = Solana.keypair()
 
@@ -20,6 +29,10 @@ defmodule Solana.TestHelpers do
     end
   end
 
+  @doc """
+  Generates a list of `n` keypairs.
+  """
+  @spec keypairs(n :: pos_integer) :: [Solana.keypair()]
   def keypairs(n) do
     Enum.map(1..n, fn _ -> Solana.keypair() end)
   end
