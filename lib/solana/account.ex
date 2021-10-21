@@ -1,4 +1,5 @@
 defmodule Solana.Account do
+  @moduledoc false
   @type t :: %__MODULE__{
           signer?: boolean(),
           writable?: boolean(),

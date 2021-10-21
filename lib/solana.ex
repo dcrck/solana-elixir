@@ -37,18 +37,9 @@ defmodule Solana do
   defdelegate pubkey!(encoded), to: Solana.Key, as: :decode!
 
   @doc """
-  Creates or retrieves a client to interact with Solana's JSON RPC API.
-
-  ## Example
-
-      iex> key = Solana.keypair() |> Solana.pubkey!()
-      iex> client = Solana.rpc_client(network: "localhost")
-      iex> {:ok, signature} = Solana.RPC.send(client, Solana.RPC.Request.request_airdrop(key, 1))
-      iex> is_binary(signature)
-      true
-
+  Calls `Solana.RPC.client` with the list of `options` turned into a map.
   """
-  @spec rpc_client(keyword) :: Tesla.Client.t()
+  @spec rpc_client(options :: keyword) :: Tesla.Client.t()
   def rpc_client(config), do: Solana.RPC.client(Enum.into(config, %{}))
 
   @doc """

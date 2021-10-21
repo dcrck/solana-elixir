@@ -1,10 +1,22 @@
 defmodule Solana.RPC do
+  @moduledoc """
+  Functions for dealing with Solana's JSON-RPC API.
+  """
   require Logger
 
   alias Solana.RPC
 
   @doc """
-  Creates an API client used to interact with Solana's JSON-RPC API
+  Creates an API client used to interact with Solana's JSON-RPC API.
+
+  ## Example
+
+      iex> key = Solana.keypair() |> Solana.pubkey!()
+      iex> client = Solana.rpc_client(network: "localhost")
+      iex> {:ok, signature} = Solana.RPC.send(client, Solana.RPC.Request.request_airdrop(key, 1))
+      iex> is_binary(signature)
+      true
+
   """
   @spec client(map) :: Tesla.Client.t()
   def client(config = %{}) do

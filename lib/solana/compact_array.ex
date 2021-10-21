@@ -1,4 +1,5 @@
 defmodule Solana.CompactArray do
+  @moduledoc false
   use Bitwise, skip_operators: true
 
   @spec to_iolist(arr :: iolist | nil) :: iolist

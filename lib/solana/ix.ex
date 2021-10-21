@@ -1,4 +1,5 @@
 defmodule Solana.Instruction do
+  @moduledoc false
   alias Solana.Account
 
   @type t :: %__MODULE__{
@@ -17,6 +18,7 @@ defmodule Solana.Instruction do
     Enum.into(data, <<>>, &encode_value/1)
   end
 
+  # encodes a string in Rust's expected format
   defp encode_value({value, "str"}) when is_binary(value) do
     <<byte_size(value)::little-size(32), 0::32, value::binary>>
   end
