@@ -3,10 +3,16 @@ defmodule Solana.Key do
   functions for creating and checking Solana keys and keypairs
   """
 
+  @typedoc "Solana public or private key"
   @type t :: Ed25519.key()
+
+  @typedoc "a public/private keypair"
   @type pair :: {t(), t()}
 
   @spec pair() :: pair
+  @doc """
+  Generates a public/private key pair in the format `{private_key, public_key}`
+  """
   defdelegate pair, to: Ed25519, as: :generate_key_pair
 
   @doc """
@@ -36,12 +42,17 @@ defmodule Solana.Key do
   end
 
   @doc """
-  Checks to see if a key is valid.
+  Checks to see if a `t:Solana.Key.t` is valid.
   """
   @spec check(binary) :: {:ok, t} | {:error, binary}
   def check(<<key::binary-32>>), do: {:ok, key}
   def check(_), do: {:error, "invalid public key"}
 
+  @doc """
+  Derive a public key from another key, a seed, and a program ID. The program ID
+  will also serve as the owner of the public key, giving it permission to write
+  data to the account.
+  """
   @spec with_seed(from :: t, seed :: binary, program_id :: t) ::
           {:ok, t} | {:error, binary}
   def with_seed(from, seed, program_id) do
