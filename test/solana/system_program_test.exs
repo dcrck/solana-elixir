@@ -17,11 +17,10 @@ defmodule Solana.SystemProgramTest do
   describe "create_account/1" do
     test "can create account", %{tracker: tracker, client: client, payer: payer} do
       new = Solana.keypair()
-      request_opts = [commitment: "confirmed"]
 
       tx_reqs = [
-        RPC.Request.get_minimum_balance_for_rent_exemption(0, request_opts),
-        RPC.Request.get_recent_blockhash(request_opts)
+        RPC.Request.get_minimum_balance_for_rent_exemption(0, commitment: "confirmed"),
+        RPC.Request.get_recent_blockhash(commitment: "confirmed")
       ]
 
       [{:ok, lamports}, {:ok, %{"blockhash" => blockhash}}] = RPC.send(client, tx_reqs)
@@ -45,7 +44,44 @@ defmodule Solana.SystemProgramTest do
         RPC.send_and_confirm(client, tracker, tx, commitment: "confirmed", timeout: 1_000)
 
       assert {:ok, %{"lamports" => ^lamports}} =
-               RPC.send(client, RPC.Request.get_account_info(pubkey!(new), request_opts))
+               RPC.send(
+                 client,
+                 RPC.Request.get_account_info(pubkey!(new), commitment: "confirmed")
+               )
+    end
+
+    test "can create an account with a seed", %{tracker: tracker, client: client, payer: payer} do
+      {:ok, new} = Solana.Key.with_seed(pubkey!(payer), "create", SystemProgram.id())
+
+      tx_reqs = [
+        RPC.Request.get_minimum_balance_for_rent_exemption(0, commitment: "confirmed"),
+        RPC.Request.get_recent_blockhash(commitment: "confirmed")
+      ]
+
+      [{:ok, lamports}, {:ok, %{"blockhash" => blockhash}}] = RPC.send(client, tx_reqs)
+
+      tx = %Transaction{
+        instructions: [
+          SystemProgram.create_account(
+            lamports: lamports,
+            space: 0,
+            program_id: SystemProgram.id(),
+            from: pubkey!(payer),
+            new: new,
+            base: pubkey!(payer),
+            seed: "create"
+          )
+        ],
+        signers: [payer],
+        blockhash: blockhash,
+        payer: pubkey!(payer)
+      }
+
+      {:ok, _signature} =
+        RPC.send_and_confirm(client, tracker, tx, commitment: "confirmed", timeout: 1_000)
+
+      assert {:ok, %{"lamports" => ^lamports}} =
+               RPC.send(client, RPC.Request.get_account_info(new, commitment: "confirmed"))
     end
   end
 
@@ -90,6 +126,59 @@ defmodule Solana.SystemProgramTest do
                RPC.send(
                  client,
                  RPC.Request.get_account_info(pubkey!(new),
+                   commitment: "confirmed",
+                   encoding: "jsonParsed"
+                 )
+               )
+    end
+
+    test "can transfer lamports to an account with a seed", %{
+      tracker: tracker,
+      client: client,
+      payer: payer
+    } do
+      {:ok, new} = Solana.Key.with_seed(pubkey!(payer), "transfer", SystemProgram.id())
+      space = 0
+
+      tx_reqs = [
+        RPC.Request.get_minimum_balance_for_rent_exemption(space, commitment: "confirmed"),
+        RPC.Request.get_recent_blockhash(commitment: "confirmed")
+      ]
+
+      [{:ok, lamports}, {:ok, %{"blockhash" => blockhash}}] = RPC.send(client, tx_reqs)
+
+      tx = %Transaction{
+        instructions: [
+          SystemProgram.create_account(
+            lamports: 1_000 + lamports,
+            space: space,
+            program_id: SystemProgram.id(),
+            from: pubkey!(payer),
+            new: new,
+            base: pubkey!(payer),
+            seed: "transfer"
+          ),
+          SystemProgram.transfer(
+            lamports: 1_000,
+            from: new,
+            to: pubkey!(payer),
+            base: pubkey!(payer),
+            seed: "transfer",
+            program_id: SystemProgram.id()
+          )
+        ],
+        signers: [payer],
+        blockhash: blockhash,
+        payer: pubkey!(payer)
+      }
+
+      {:ok, _signature} =
+        RPC.send_and_confirm(client, tracker, tx, commitment: "confirmed", timeout: 1_000)
+
+      assert {:ok, %{"lamports" => ^lamports}} =
+               RPC.send(
+                 client,
+                 RPC.Request.get_account_info(new,
                    commitment: "confirmed",
                    encoding: "jsonParsed"
                  )
@@ -146,6 +235,59 @@ defmodule Solana.SystemProgramTest do
 
       assert pubkey!(account_info["owner"]) == Solana.SPL.Token.id()
     end
+
+    test "can assign a new program ID to an account with a seed", %{
+      tracker: tracker,
+      client: client,
+      payer: payer
+    } do
+      {:ok, new} = Solana.Key.with_seed(pubkey!(payer), "assign", Solana.SPL.Token.id())
+      space = 0
+
+      tx_reqs = [
+        RPC.Request.get_minimum_balance_for_rent_exemption(space, commitment: "confirmed"),
+        RPC.Request.get_recent_blockhash(commitment: "confirmed")
+      ]
+
+      [{:ok, lamports}, {:ok, %{"blockhash" => blockhash}}] = RPC.send(client, tx_reqs)
+
+      tx = %Transaction{
+        instructions: [
+          SystemProgram.create_account(
+            lamports: lamports,
+            space: space,
+            program_id: Solana.SPL.Token.id(),
+            from: pubkey!(payer),
+            new: new,
+            base: pubkey!(payer),
+            seed: "assign"
+          ),
+          SystemProgram.assign(
+            account: new,
+            program_id: Solana.SPL.Token.id(),
+            base: pubkey!(payer),
+            seed: "assign"
+          )
+        ],
+        signers: [payer],
+        blockhash: blockhash,
+        payer: pubkey!(payer)
+      }
+
+      {:ok, _signature} =
+        RPC.send_and_confirm(client, tracker, tx, commitment: "confirmed", timeout: 1_000)
+
+      {:ok, account_info} =
+        RPC.send(
+          client,
+          RPC.Request.get_account_info(new,
+            commitment: "confirmed",
+            encoding: "jsonParsed"
+          )
+        )
+
+      assert pubkey!(account_info["owner"]) == Solana.SPL.Token.id()
+    end
   end
 
   describe "allocate/1" do
@@ -187,6 +329,61 @@ defmodule Solana.SystemProgramTest do
         RPC.send(
           client,
           RPC.Request.get_account_info(pubkey!(new),
+            commitment: "confirmed",
+            encoding: "jsonParsed"
+          )
+        )
+
+      assert byte_size(Base.decode64!(data)) == new_space
+    end
+
+    test "can allocate space to an account with a seed", %{
+      tracker: tracker,
+      client: client,
+      payer: payer
+    } do
+      {:ok, new} = Solana.Key.with_seed(pubkey!(payer), "allocate", SystemProgram.id())
+      space = 0
+      new_space = 10
+
+      tx_reqs = [
+        RPC.Request.get_minimum_balance_for_rent_exemption(new_space, commitment: "confirmed"),
+        RPC.Request.get_recent_blockhash(commitment: "confirmed")
+      ]
+
+      [{:ok, lamports}, {:ok, %{"blockhash" => blockhash}}] = RPC.send(client, tx_reqs)
+
+      tx = %Transaction{
+        instructions: [
+          SystemProgram.create_account(
+            lamports: lamports,
+            space: space,
+            program_id: SystemProgram.id(),
+            from: pubkey!(payer),
+            new: new,
+            base: pubkey!(payer),
+            seed: "allocate"
+          ),
+          SystemProgram.allocate(
+            account: new,
+            space: new_space,
+            program_id: SystemProgram.id(),
+            base: pubkey!(payer),
+            seed: "allocate"
+          )
+        ],
+        signers: [payer],
+        blockhash: blockhash,
+        payer: pubkey!(payer)
+      }
+
+      {:ok, _signature} =
+        RPC.send_and_confirm(client, tracker, tx, commitment: "confirmed", timeout: 1_000)
+
+      {:ok, %{"data" => [data, "base64"]}} =
+        RPC.send(
+          client,
+          RPC.Request.get_account_info(new,
             commitment: "confirmed",
             encoding: "jsonParsed"
           )

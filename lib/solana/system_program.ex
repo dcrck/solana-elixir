@@ -210,7 +210,7 @@ defmodule Solana.SystemProgram do
         Instruction.encode_data([
           {3, 32},
           params.base,
-          params.seed,
+          {params.seed, "str"},
           {params.lamports, 64},
           {params.space, 64},
           params.program_id
@@ -248,7 +248,7 @@ defmodule Solana.SystemProgram do
     %Instruction{
       program: id(),
       accounts: [
-        %Account{key: params.from, signer?: true, writable?: true},
+        %Account{key: params.from, writable?: true},
         %Account{key: params.base, signer?: true},
         %Account{key: params.to, writable?: true}
       ],
@@ -256,7 +256,7 @@ defmodule Solana.SystemProgram do
         Instruction.encode_data([
           {11, 32},
           {params.lamports, 64},
-          params.seed,
+          {params.seed, "str"},
           params.program_id
         ])
     }
@@ -283,7 +283,7 @@ defmodule Solana.SystemProgram do
         Instruction.encode_data([
           {10, 32},
           params.base,
-          params.seed,
+          {params.seed, "str"},
           params.program_id
         ])
     }
@@ -310,7 +310,7 @@ defmodule Solana.SystemProgram do
         Instruction.encode_data([
           {9, 32},
           params.base,
-          params.seed,
+          {params.seed, "str"},
           {params.space, 64},
           params.program_id
         ])
