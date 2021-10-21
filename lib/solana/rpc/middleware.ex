@@ -1,6 +1,8 @@
 defmodule Solana.RPC.Middleware do
   @behaviour Tesla.Middleware
 
+  @moduledoc false
+
   @success 200..299
 
   def call(env = %{body: request}, next, _) do

@@ -1,5 +1,17 @@
 defmodule Solana.RPC.Request do
+  @moduledoc """
+  Functions for creating Solana JSON-RPC API requests.
+
+  This client only implements the most common methods (see the function
+  documentation below). If you need a method that's on the [full
+  list](https://docs.solana.com/developing/clients/jsonrpc-api#json-rpc-api-reference)
+  but is not implemented here, please open an issue or contact the maintainers.
+  """
+
+  @typedoc "JSON-RPC API request (pre-encoding)"
   @type t :: {String.t(), [String.t() | map]}
+
+  @typedoc "JSON-RPC API request (JSON encoding)"
   @type json :: %{
           jsonrpc: String.t(),
           id: term,
@@ -8,7 +20,8 @@ defmodule Solana.RPC.Request do
         }
 
   @doc """
-  Encodes requests in the required format
+  Encodes a `t:Solana.RPC.Request.t` -- or a list of them -- in the [required
+  format](https://docs.solana.com/developing/clients/jsonrpc-api#request-formatting).
   """
   @spec encode(requests :: [t]) :: [json]
   def encode(requests) when is_list(requests) do
