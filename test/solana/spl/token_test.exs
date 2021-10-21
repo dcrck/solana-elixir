@@ -154,6 +154,84 @@ defmodule Solana.SPL.TokenTest do
                amount: 0
              } == Token.from_account_info(token_info)
     end
+
+    test "approves when checking mint and decimals", %{
+      client: client,
+      tracker: tracker,
+      payer: payer
+    } do
+      [mint, token, auth, owner, delegate] = keypairs(5)
+
+      tx_reqs = [
+        RPC.Request.get_minimum_balance_for_rent_exemption(Token.Mint.byte_size(),
+          commitment: "confirmed"
+        ),
+        RPC.Request.get_minimum_balance_for_rent_exemption(Token.byte_size(),
+          commitment: "confirmed"
+        ),
+        RPC.Request.get_recent_blockhash(commitment: "confirmed")
+      ]
+
+      [{:ok, mint_balance}, {:ok, token_balance}, {:ok, %{"blockhash" => blockhash}}] =
+        RPC.send(client, tx_reqs)
+
+      tx = %Transaction{
+        instructions: [
+          Token.Mint.init(
+            balance: mint_balance,
+            payer: pubkey!(payer),
+            authority: pubkey!(auth),
+            new: pubkey!(mint),
+            decimals: 0
+          ),
+          Token.init(
+            balance: token_balance,
+            payer: pubkey!(payer),
+            mint: pubkey!(mint),
+            owner: pubkey!(owner),
+            new: pubkey!(token)
+          ),
+          Token.approve(
+            source: pubkey!(token),
+            delegate: pubkey!(delegate),
+            owner: pubkey!(owner),
+            amount: 123,
+            checked?: true,
+            decimals: 0,
+            mint: pubkey!(mint)
+          )
+        ],
+        signers: [payer, mint, token, owner],
+        blockhash: blockhash,
+        payer: pubkey!(payer)
+      }
+
+      {:ok, _signatures} =
+        RPC.send_and_confirm(client, tracker, tx,
+          commitment: "confirmed",
+          timeout: 1_000
+        )
+
+      assert {:ok, token_info} =
+               RPC.send(
+                 client,
+                 RPC.Request.get_account_info(pubkey!(token),
+                   commitment: "confirmed",
+                   encoding: "jsonParsed"
+                 )
+               )
+
+      assert %Token{
+               owner: pubkey!(owner),
+               mint: pubkey!(mint),
+               delegate: pubkey!(delegate),
+               delegated_amount: 123,
+               initialized?: true,
+               frozen?: false,
+               native?: false,
+               amount: 0
+             } == Token.from_account_info(token_info)
+    end
   end
 
   describe "revoke/1" do
@@ -370,6 +448,74 @@ defmodule Solana.SPL.TokenTest do
 
       assert %Token{amount: 42} = Token.from_account_info(token_info)
     end
+
+    test "can mint tokens when checking mint/decimals", %{
+      client: client,
+      payer: payer,
+      tracker: tracker
+    } do
+      [mint, token, auth, owner] = keypairs(4)
+
+      tx_reqs = [
+        RPC.Request.get_minimum_balance_for_rent_exemption(Token.Mint.byte_size(),
+          commitment: "confirmed"
+        ),
+        RPC.Request.get_minimum_balance_for_rent_exemption(Token.byte_size(),
+          commitment: "confirmed"
+        ),
+        RPC.Request.get_recent_blockhash(commitment: "confirmed")
+      ]
+
+      [{:ok, mint_balance}, {:ok, token_balance}, {:ok, %{"blockhash" => blockhash}}] =
+        RPC.send(client, tx_reqs)
+
+      tx = %Transaction{
+        instructions: [
+          Token.Mint.init(
+            balance: mint_balance,
+            payer: pubkey!(payer),
+            authority: pubkey!(auth),
+            new: pubkey!(mint),
+            decimals: 0
+          ),
+          Token.init(
+            balance: token_balance,
+            payer: pubkey!(payer),
+            mint: pubkey!(mint),
+            owner: pubkey!(owner),
+            new: pubkey!(token)
+          ),
+          Token.mint_to(
+            token: pubkey!(token),
+            mint: pubkey!(mint),
+            authority: pubkey!(auth),
+            amount: 42,
+            checked?: true,
+            decimals: 0
+          )
+        ],
+        signers: [payer, mint, token, auth],
+        blockhash: blockhash,
+        payer: pubkey!(payer)
+      }
+
+      {:ok, _signatures} =
+        RPC.send_and_confirm(client, tracker, tx,
+          commitment: "confirmed",
+          timeout: 1_000
+        )
+
+      assert {:ok, token_info} =
+               RPC.send(
+                 client,
+                 RPC.Request.get_account_info(pubkey!(token),
+                   commitment: "confirmed",
+                   encoding: "jsonParsed"
+                 )
+               )
+
+      assert %Token{amount: 42} = Token.from_account_info(token_info)
+    end
   end
 
   describe "transfer/1" do
@@ -461,6 +607,100 @@ defmodule Solana.SPL.TokenTest do
       assert %Token{amount: 10} = Token.from_account_info(from_info)
       assert %Token{amount: 5} = Token.from_account_info(to_info)
     end
+
+    test "can transfer tokens when checking mint/decimals", %{
+      client: client,
+      payer: payer,
+      tracker: tracker
+    } do
+      [mint, from, to, auth, owner] = keypairs(5)
+
+      tx_reqs = [
+        RPC.Request.get_minimum_balance_for_rent_exemption(Token.Mint.byte_size(),
+          commitment: "confirmed"
+        ),
+        RPC.Request.get_minimum_balance_for_rent_exemption(Token.byte_size(),
+          commitment: "confirmed"
+        ),
+        RPC.Request.get_recent_blockhash(commitment: "confirmed")
+      ]
+
+      [{:ok, mint_balance}, {:ok, token_balance}, {:ok, %{"blockhash" => blockhash}}] =
+        RPC.send(client, tx_reqs)
+
+      tx = %Transaction{
+        instructions: [
+          Token.Mint.init(
+            balance: mint_balance,
+            payer: pubkey!(payer),
+            authority: pubkey!(auth),
+            new: pubkey!(mint),
+            decimals: 0
+          ),
+          Token.init(
+            balance: token_balance,
+            payer: pubkey!(payer),
+            mint: pubkey!(mint),
+            owner: pubkey!(owner),
+            new: pubkey!(from)
+          ),
+          Token.init(
+            balance: token_balance,
+            payer: pubkey!(payer),
+            mint: pubkey!(mint),
+            owner: pubkey!(owner),
+            new: pubkey!(to)
+          ),
+          Token.mint_to(
+            token: pubkey!(from),
+            mint: pubkey!(mint),
+            authority: pubkey!(auth),
+            amount: 15,
+            checked?: true,
+            decimals: 0
+          ),
+          Token.transfer(
+            from: pubkey!(from),
+            to: pubkey!(to),
+            owner: pubkey!(owner),
+            amount: 5,
+            checked?: true,
+            mint: pubkey!(mint),
+            decimals: 0
+          )
+        ],
+        signers: [payer, mint, from, to, auth, owner],
+        blockhash: blockhash,
+        payer: pubkey!(payer)
+      }
+
+      {:ok, _signatures} =
+        RPC.send_and_confirm(client, tracker, tx,
+          commitment: "confirmed",
+          timeout: 1_000
+        )
+
+      assert {:ok, from_info} =
+               RPC.send(
+                 client,
+                 RPC.Request.get_account_info(pubkey!(from),
+                   commitment: "confirmed",
+                   encoding: "jsonParsed"
+                 )
+               )
+
+      assert {:ok, to_info} =
+               RPC.send(
+                 client,
+                 RPC.Request.get_account_info(pubkey!(to),
+                   commitment: "confirmed",
+                   encoding: "jsonParsed"
+                 )
+               )
+
+      assert %Token{amount: 10} = Token.from_account_info(from_info)
+      assert %Token{amount: 5} = Token.from_account_info(to_info)
+    end
   end
 
   describe "burn/1" do
@@ -507,6 +747,82 @@ defmodule Solana.SPL.TokenTest do
             mint: pubkey!(mint),
             owner: pubkey!(owner),
             amount: 2
+          )
+        ],
+        signers: [payer, mint, token, auth, owner],
+        blockhash: blockhash,
+        payer: pubkey!(payer)
+      }
+
+      {:ok, _signatures} =
+        RPC.send_and_confirm(client, tracker, tx,
+          commitment: "confirmed",
+          timeout: 1_000
+        )
+
+      assert {:ok, token_info} =
+               RPC.send(
+                 client,
+                 RPC.Request.get_account_info(pubkey!(token),
+                   commitment: "confirmed",
+                   encoding: "jsonParsed"
+                 )
+               )
+
+      assert %Token{amount: 40} = Token.from_account_info(token_info)
+    end
+
+    test "can burn tokens when checking mint/decimals", %{
+      client: client,
+      payer: payer,
+      tracker: tracker
+    } do
+      [mint, token, auth, owner] = keypairs(4)
+
+      tx_reqs = [
+        RPC.Request.get_minimum_balance_for_rent_exemption(Token.Mint.byte_size(),
+          commitment: "confirmed"
+        ),
+        RPC.Request.get_minimum_balance_for_rent_exemption(Token.byte_size(),
+          commitment: "confirmed"
+        ),
+        RPC.Request.get_recent_blockhash(commitment: "confirmed")
+      ]
+
+      [{:ok, mint_balance}, {:ok, token_balance}, {:ok, %{"blockhash" => blockhash}}] =
+        RPC.send(client, tx_reqs)
+
+      tx = %Transaction{
+        instructions: [
+          Token.Mint.init(
+            balance: mint_balance,
+            payer: pubkey!(payer),
+            authority: pubkey!(auth),
+            new: pubkey!(mint),
+            decimals: 0
+          ),
+          Token.init(
+            balance: token_balance,
+            payer: pubkey!(payer),
+            mint: pubkey!(mint),
+            owner: pubkey!(owner),
+            new: pubkey!(token)
+          ),
+          Token.mint_to(
+            token: pubkey!(token),
+            mint: pubkey!(mint),
+            authority: pubkey!(auth),
+            amount: 42,
+            checked?: true,
+            decimals: 0
+          ),
+          Token.burn(
+            token: pubkey!(token),
+            mint: pubkey!(mint),
+            owner: pubkey!(owner),
+            amount: 2,
+            checked?: true,
+            decimals: 0
           )
         ],
         signers: [payer, mint, token, auth, owner],
