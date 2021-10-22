@@ -1,7 +1,13 @@
 defmodule Solana.Instruction do
-  @moduledoc false
+  @moduledoc """
+  Functions, types, and structures related to Solana
+  [instructions](https://docs.solana.com/developing/programming-model/transactions#instructions).
+  """
   alias Solana.Account
 
+  @typedoc """
+  All the details needed to encode an instruction.
+  """
   @type t :: %__MODULE__{
           program: Solana.key() | nil,
           accounts: [Account.t()],
@@ -14,6 +20,7 @@ defmodule Solana.Instruction do
     accounts: []
   ]
 
+  @doc false
   def encode_data(data) do
     Enum.into(data, <<>>, &encode_value/1)
   end
