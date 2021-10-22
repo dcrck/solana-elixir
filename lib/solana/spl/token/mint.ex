@@ -6,7 +6,7 @@ defmodule Solana.SPL.Token.Mint do
   alias Solana.{Instruction, Account, SPL.Token, SystemProgram}
   import Solana.Helpers
 
-  @typedoc "token mint account information"
+  @typedoc "Token Program mint account metadata."
   @type t :: %__MODULE__{
           authority: Solana.key() | nil,
           supply: non_neg_integer,
@@ -30,9 +30,12 @@ defmodule Solana.SPL.Token.Mint do
   def byte_size(), do: 82
 
   @doc """
-  Translates the result of a `get_account_info` RPC API call into a `Mint`.
+  Translates the result of a `Solana.RPC.Request.get_account_info/2` into a
+  `t:Solana.SPL.Token.Mint.t/0`.
   """
   @spec from_account_info(info :: map) :: t | :error
+  def from_account_info(info)
+
   def from_account_info(%{"data" => %{"parsed" => %{"type" => "mint", "info" => info}}}) do
     case {from_mint_account_info(info), info["freezeAuthority"]} do
       {:error, _} -> :error
@@ -91,7 +94,7 @@ defmodule Solana.SPL.Token.Mint do
     ]
   ]
   @doc """
-  Genereates the instructions to initialize a `Solana.SPL.Token.Mint.t`.
+  Genereates the instructions to initialize a mint account.
 
   ## Options
 

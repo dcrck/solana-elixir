@@ -22,6 +22,8 @@ defmodule Solana.SystemProgram.Nonce do
   nonce account's information.
   """
   @spec from_account_info(info :: map) :: map | :error
+  def from_account_info(info)
+
   def from_account_info(%{"data" => %{"parsed" => %{"info" => info}}}) do
     from_nonce_account_info(info)
   end

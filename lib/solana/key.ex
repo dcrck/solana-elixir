@@ -1,6 +1,8 @@
 defmodule Solana.Key do
   @moduledoc """
-  functions for creating and checking Solana keys and keypairs
+  Functions for creating and validating Solana
+  [keys](https://docs.solana.com/terminology#public-key-pubkey) and
+  [keypairs](https://docs.solana.com/terminology#keypair).
   """
 
   @typedoc "Solana public or private key"
@@ -16,8 +18,9 @@ defmodule Solana.Key do
   defdelegate pair, to: Ed25519, as: :generate_key_pair
 
   @doc """
-  decodes a base58-encoded key and returns it in a tuple. If it fails, return
-  an error tuple.
+  decodes a base58-encoded key and returns it in a tuple.
+
+  If it fails, return an error tuple.
   """
   @spec decode(encoded :: binary) :: {:ok, t} | {:error, binary}
   def decode(encoded) when is_binary(encoded) do
@@ -27,8 +30,9 @@ defmodule Solana.Key do
   def decode(_), do: {:error, "invalid public key"}
 
   @doc """
-  decodes a base58-encoded key and returns it. Throws an `ArgumentError` if it
-  fails.
+  decodes a base58-encoded key and returns it.
+
+  Throws an `ArgumentError` if it fails.
   """
   @spec decode!(encoded :: binary) :: t
   def decode!(encoded) when is_binary(encoded) do
@@ -42,23 +46,25 @@ defmodule Solana.Key do
   end
 
   @doc """
-  Checks to see if a `t:Solana.Key.t` is valid.
+  Checks to see if a `t:Solana.Key.t/0` is valid.
   """
-  @spec check(binary) :: {:ok, t} | {:error, binary}
+  @spec check(key :: binary) :: {:ok, t} | {:error, binary}
+  def check(key)
   def check(<<key::binary-32>>), do: {:ok, key}
   def check(_), do: {:error, "invalid public key"}
 
   @doc """
-  Derive a public key from another key, a seed, and a program ID. The program ID
-  will also serve as the owner of the public key, giving it permission to write
-  data to the account.
+  Derive a public key from another key, a seed, and a program ID.
+
+  The program ID will also serve as the owner of the public key, giving it
+  permission to write data to the account.
   """
-  @spec with_seed(from :: t, seed :: binary, program_id :: t) ::
+  @spec with_seed(base :: t, seed :: binary, program_id :: t) ::
           {:ok, t} | {:error, binary}
-  def with_seed(from, seed, program_id) do
-    with {:ok, from} <- check(from),
+  def with_seed(base, seed, program_id) do
+    with {:ok, base} <- check(base),
          {:ok, program_id} <- check(program_id) do
-      [from, seed, program_id]
+      [base, seed, program_id]
       |> hash()
       |> check()
     else
@@ -98,10 +104,11 @@ defmodule Solana.Key do
 
   Valid addresses must fall off the ed25519 curve; generate a series of nonces,
   then combine each one with the given seeds and program ID until a valid
-  address is found. If we can't find one, return an error tuple.
+  address is found. If a valid address is found, return the address and the
+  nonce in a tuple. Otherwise, return an error tuple.
   """
   @spec find_address(seeds :: [binary], program_id :: t) ::
-          {:ok, t, byte} | {:error, term}
+          {:ok, t, nonce :: byte} | {:error, :no_nonce}
   def find_address(seeds, program_id) do
     case check(program_id) do
       {:ok, program_id} ->

@@ -34,15 +34,17 @@ defmodule Solana.Transaction do
   ]
 
   @doc """
-  Checks to see if a transaction's signature is valid. Returns `{:ok,
-  signature}` if it is, and an error tuple if it isn't.
+  Checks to see if a transaction's signature is valid.
+
+  Returns `{:ok, signature}` if it is, and an error tuple if it isn't.
   """
   @spec check(binary) :: {:ok, binary} | {:error, :invalid_signature}
+  def check(signature)
   def check(<<signature::binary-64>>), do: {:ok, signature}
   def check(_), do: {:error, :invalid_signature}
 
   @doc """
-  Encodes a `t:Solana.Transaction.t` into a [binary
+  Encodes a `t:Solana.Transaction.t/0` into a [binary
   format](https://docs.solana.com/developing/programming-model/transactions#anatomy-of-a-transaction)
 
   Returns `{:ok, encoded_transaction}` if the transaction was successfully

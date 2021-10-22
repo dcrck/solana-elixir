@@ -48,9 +48,10 @@ defmodule Solana.SystemProgram do
     ]
   ]
   @doc """
-  Generates instructions to create a new account. Accepts a `new` address
-  generated via `Solana.Key.with_seed/3`, as long as the `base` key and `seed`
-  used to generate that address are provided.
+  Generates instructions to create a new account.
+
+  Accepts a `new` address generated via `Solana.Key.with_seed/3`, as long as the
+  `base` key and `seed` used to generate that address are provided.
 
   ## Options
 
@@ -102,6 +103,7 @@ defmodule Solana.SystemProgram do
   ]
   @doc """
   Generates instructions to transfer lamports from one account to another.
+
   Accepts a `from` address generated via `Solana.Key.with_seed/3`, as long as the
   `base` key, `program_id`, and `seed` used to generate that address are
   provided.
@@ -146,6 +148,7 @@ defmodule Solana.SystemProgram do
   ]
   @doc """
   Generates instructions to assign account ownership to a program.
+
   Accepts an `account` address generated via `Solana.Key.with_seed/3`, as long
   as the `base` key and `seed` used to generate that address are provided.
 
@@ -194,6 +197,7 @@ defmodule Solana.SystemProgram do
   ]
   @doc """
   Generates instructions to allocate space to an account.
+
   Accepts an `account` address generated via `Solana.Key.with_seed/3`, as long
   as the `base` key, `program_id`, and `seed` used to generate that address are
   provided.

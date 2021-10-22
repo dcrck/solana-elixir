@@ -6,7 +6,7 @@ defmodule Solana.SPL.Token do
   alias Solana.{Instruction, Account, SystemProgram}
   import Solana.Helpers
 
-  @typedoc "token account information"
+  @typedoc "Token account metadata."
   @type t :: %__MODULE__{
           mint: Solana.key(),
           owner: Solana.key(),
@@ -48,9 +48,12 @@ defmodule Solana.SPL.Token do
   def byte_size(), do: 165
 
   @doc """
-  Translates the result of a `Solana.RPC.Request.get_account_info/2` into a `t:Solana.SPL.Token.t`.
+  Translates the result of a `Solana.RPC.Request.get_account_info/2` into a
+  `t:Solana.SPL.Token.t/0`.
   """
   @spec from_account_info(info :: map) :: t | :error
+  def from_account_info(info)
+
   def from_account_info(%{"data" => %{"parsed" => %{"info" => info}}}) do
     case from_token_account_info(info) do
       :error -> :error
@@ -123,6 +126,7 @@ defmodule Solana.SPL.Token do
   ]
   @doc """
   Creates the instructions which initialize a new account to hold tokens.
+
   If this account is associated with the native mint then the token balance of
   the initialized account will be equal to the amount of SOL in the account. If
   this account is associated with another mint, that mint must be initialized
@@ -213,9 +217,10 @@ defmodule Solana.SPL.Token do
 
   @doc """
   Creates an instruction to transfer tokens from one account to another either
-  directly or via a delegate. If this account is associated with the native mint
-  then equal amounts of SOL and Tokens will be transferred to the destination
-  account.
+  directly or via a delegate.
+
+  If this account is associated with the native mint then equal amounts of SOL
+  and Tokens will be transferred to the destination account.
 
   If you want to check the token's `mint` and `decimals`, set the `checked?`
   option to `true` and provide the `mint` and `decimals` options.
@@ -302,8 +307,10 @@ defmodule Solana.SPL.Token do
   ]
 
   @doc """
-  Creates an instruction to approves a delegate. A delegate is given the
-  authority over tokens on behalf of the source account's owner.
+  Creates an instruction to approves a delegate.
+
+  A delegate is given the authority over tokens on behalf of the source
+  account's owner.
 
   If you want to check the token's `mint` and `decimals`, set the `checked?`
   option to `true` and provide the `mint` and `decimals` options.
@@ -487,8 +494,9 @@ defmodule Solana.SPL.Token do
     ]
   ]
   @doc """
-  Creates an instruction to mints new tokens to an account. The native mint does
-  not support minting.
+  Creates an instruction to mints new tokens to an account.
+
+  The native mint does not support minting.
 
   If you want to check the token's `mint` and `decimals`, set the `checked?`
   option to `true` and provide the `decimals` option.
@@ -567,6 +575,7 @@ defmodule Solana.SPL.Token do
 
   @doc """
   Creates an instruction to burn tokens by removing them from an account.
+
   `burn/1` does not support accounts associated with the native mint, use
   `close_account/1` instead.
 
@@ -628,8 +637,9 @@ defmodule Solana.SPL.Token do
   ]
   @doc """
   Creates an instruction to close an account by transferring all its SOL to the
-  `destination` account. Non-native accounts may only be closed if its token
-  amount is zero.
+  `destination` account.
+
+  A non-native account may only be closed if its token amount is zero.
 
   ## Options
 

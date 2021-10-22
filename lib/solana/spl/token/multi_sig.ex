@@ -4,14 +4,13 @@ defmodule Solana.SPL.Token.MultiSig do
 
   Multi-signature accounts can used in place of any single owner/delegate
   accounts in any token instruction that require an owner/delegate to be
-  present. The variant field represents the number of signers (M)
-  required to validate this multisignature account.
+  present.
   """
 
   alias Solana.{Instruction, Account, SPL.Token, SystemProgram}
   import Solana.Helpers
 
-  @typedoc "multi-signature account information"
+  @typedoc "Multi-signature account metadata."
   @type t :: %__MODULE__{
           signers_required: byte,
           signers_total: byte,
@@ -29,9 +28,11 @@ defmodule Solana.SPL.Token.MultiSig do
 
   @doc """
   Translates the result of a `Solana.RPC.Request.get_account_info/2` into a
-  `t:Solana.SPL.Token.MultiSig.t`.
+  `t:Solana.SPL.Token.MultiSig.t/0`.
   """
   @spec from_account_info(info :: map) :: t | :error
+  def from_account_info(info)
+
   def from_account_info(%{"data" => %{"parsed" => %{"info" => info}}}) do
     from_multisig_account_info(info)
   end
@@ -68,12 +69,12 @@ defmodule Solana.SPL.Token.MultiSig do
     signers: [
       type: {:list, {:custom, Solana.Key, :check, []}},
       required: true,
-      doc: "The full set of signers"
+      doc: "The full set of signers; should be a list of 11 members or fewer"
     ],
     signatures_required: [
       type: {:in, 1..11},
       required: true,
-      doc: "number of signatures required"
+      doc: "number of signatures required; should be between 1 and 11 (inclusive)"
     ],
     new: [
       type: {:custom, Solana.Key, :check, []},
@@ -83,9 +84,9 @@ defmodule Solana.SPL.Token.MultiSig do
   ]
 
   @doc """
-  Creates the instructions to initialize a multisignature account with N
-  provided signers. **These instructions must be included in the same
-  Transaction.**
+  Creates the instructions to initialize a multisignature account.
+
+  **These instructions must be included in the same Transaction.**
 
   ## Options
 

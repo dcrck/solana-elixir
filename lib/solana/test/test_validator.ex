@@ -68,14 +68,17 @@ defmodule Solana.TestValidator do
   end
 
   @doc """
-  Stops a `Solana.TestValidator` process. Should be called when you want to stop
-  the `solana-test-validator`.
+  Stops a `Solana.TestValidator` process.
+
+  Should be called when you want to stop the `solana-test-validator`.
   """
   def stop(validator), do: GenServer.stop(validator, :normal)
 
   @doc """
-  Gets the state of a `Solana.TestValidator` process. This is useful when you
-  want to check the latest output of the `solana-test-validator`.
+  Gets the state of a `Solana.TestValidator` process.
+
+  This is useful when you want to check the latest output of the
+  `solana-test-validator`.
   """
   def get_state(validator), do: :sys.get_state(validator)
 

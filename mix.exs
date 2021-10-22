@@ -64,7 +64,7 @@ defmodule Solana.MixProject do
     [
       main: "readme",
       source_url: @source_url,
-      extras: ["README.md", "LICENSE"],
+      extras: ["README.md", "LICENSE"]
     ]
   end
 end

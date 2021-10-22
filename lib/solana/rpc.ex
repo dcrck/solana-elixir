@@ -6,6 +6,9 @@ defmodule Solana.RPC do
 
   alias Solana.RPC
 
+  @typedoc "Solana JSON-RPC API client."
+  @type client :: Tesla.Client.t()
+
   @doc """
   Creates an API client used to interact with Solana's JSON-RPC API.
 
@@ -18,7 +21,7 @@ defmodule Solana.RPC do
       true
 
   """
-  @spec client(map) :: Tesla.Client.t()
+  @spec client(map) :: client
   def client(config = %{}) do
     middleware = [
       {Tesla.Middleware.BaseUrl, url(config)},
@@ -39,11 +42,12 @@ defmodule Solana.RPC do
 
   @doc """
   Sends the provided transactions to the configured RPC endpoint, then confirms them.
+
   Returns a tuple containing all the transactions in the order they were confirmed, OR
   an error tuple containing the list of all the transactions that were confirmed
   before the error occurred.
   """
-  @spec send_and_confirm(any, pid, [Solana.Transaction.t()] | Solana.Transaction.t(), keyword) ::
+  @spec send_and_confirm(client, pid, [Solana.Transaction.t()] | Solana.Transaction.t(), keyword) ::
           {:ok, [binary]} | {:error, :timeout, [binary]}
   def send_and_confirm(client, tracker, txs, opts \\ []) do
     timeout = Keyword.get(opts, :timeout, 5_000)

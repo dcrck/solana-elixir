@@ -18,8 +18,9 @@ defmodule Solana.SPL.AssociatedToken do
   def id(), do: Solana.pubkey!("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL")
 
   @doc """
-  Finds the token account address associated with a given owner and mint. This
-  address will be unique to the mint/owner combination.
+  Finds the token account address associated with a given owner and mint.
+
+  This address will be unique to the mint/owner combination.
   """
   @spec find_address(mint :: Solana.key(), owner :: Solana.key()) :: {:ok, Solana.key()} | :error
   def find_address(mint, owner) do
@@ -55,8 +56,9 @@ defmodule Solana.SPL.AssociatedToken do
   ]
 
   @doc """
-  Creates an associated token account. This will be owned by the `owner`
-  regardless of who actually creates it.
+  Creates an associated token account.
+
+  This will be owned by the `owner` regardless of who actually creates it.
 
   ## Options
 

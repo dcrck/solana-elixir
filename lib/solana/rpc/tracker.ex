@@ -28,6 +28,7 @@ defmodule Solana.RPC.Tracker do
 
   @doc """
   Starts tracking a transaction signature or list of transaction signatures.
+
   Sends messages back to the calling process as transactions from the list
   are confirmed. Stops tracking automatically once transactions have been
   confirmed.
