@@ -1,6 +1,7 @@
 defmodule Solana.RPC do
   @moduledoc """
-  Functions for dealing with Solana's JSON-RPC API.
+  Functions for dealing with Solana's [JSON-RPC
+  API](https://docs.solana.com/developing/clients/jsonrpc-api).
   """
   require Logger
 
@@ -28,7 +29,8 @@ defmodule Solana.RPC do
     ]
   ]
   @doc """
-  Creates an API client used to interact with Solana's JSON-RPC API.
+  Creates an API client used to interact with Solana's [JSON-RPC
+  API](https://docs.solana.com/developing/clients/jsonrpc-api).
 
   ## Example
 
