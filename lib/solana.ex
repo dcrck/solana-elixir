@@ -42,12 +42,6 @@ defmodule Solana do
   defdelegate pubkey!(encoded), to: Solana.Key, as: :decode!
 
   @doc """
-  Calls `Solana.RPC.client/1` with the list of `options` turned into a map.
-  """
-  @spec rpc_client(options :: keyword) :: Solana.RPC.client()
-  def rpc_client(config), do: Solana.RPC.client(Enum.into(config, %{}))
-
-  @doc """
   The public key for the [Rent system
   variable](https://docs.solana.com/developing/runtime-facilities/sysvars#rent).
   """

@@ -8,7 +8,7 @@ defmodule Solana.SystemProgram.NonceTest do
 
   setup_all do
     {:ok, tracker} = RPC.Tracker.start_link(network: "localhost", t: 100)
-    client = Solana.rpc_client(network: "localhost")
+    client = RPC.client(network: "localhost")
     {:ok, payer} = create_payer(tracker, client, commitment: "confirmed")
 
     [tracker: tracker, client: client, payer: payer]

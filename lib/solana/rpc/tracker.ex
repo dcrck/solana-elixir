@@ -6,7 +6,7 @@ defmodule Solana.RPC.Tracker do
 
       iex> key = Solana.keypair() |> Solana.pubkey!()
       iex> {:ok, tracker} = Solana.RPC.Tracker.start_link(network: "localhost")
-      iex> client = Solana.rpc_client(network: "localhost")
+      iex> client = Solana.RPC.client(network: "localhost")
       iex> {:ok, tx} = Solana.RPC.send(client, Solana.RPC.Request.request_airdrop(key, 1))
       iex> Solana.Tracker.start_tracking(tracker, tx)
       iex> receive do
@@ -39,7 +39,8 @@ defmodule Solana.RPC.Tracker do
 
   @doc false
   def init(opts) do
-    {:ok, %{client: Solana.rpc_client(opts), t: Keyword.get(opts, :t, 500)}}
+    client_opts = Keyword.take(opts, [:network, :retry_options, :adapter])
+    {:ok, %{client: Solana.RPC.client(client_opts), t: Keyword.get(opts, :t, 500)}}
   end
 
   @doc false

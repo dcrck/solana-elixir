@@ -5,32 +5,59 @@ defmodule Solana.RPC do
   require Logger
 
   alias Solana.RPC
+  import Solana.Helpers
 
   @typedoc "Solana JSON-RPC API client."
   @type client :: Tesla.Client.t()
 
+  @client_schema [
+    adapter: [
+      type: :any,
+      default: Tesla.Adapter.Httpc,
+      doc: "Which `Tesla` adapter to use."
+    ],
+    network: [
+      type: {:custom, __MODULE__, :cluster_url, []},
+      required: true,
+      doc: "Which [Solana cluster](https://docs.solana.com/clusters) to connect to."
+    ],
+    retry_options: [
+      type: :keyword_list,
+      default: [],
+      doc: "Options to pass to `Tesla.Middleware.Retry`."
+    ]
+  ]
   @doc """
   Creates an API client used to interact with Solana's JSON-RPC API.
 
   ## Example
 
       iex> key = Solana.keypair() |> Solana.pubkey!()
-      iex> client = Solana.rpc_client(network: "localhost")
+      iex> client = Solana.RPC.client(network: "localhost")
       iex> {:ok, signature} = Solana.RPC.send(client, Solana.RPC.Request.request_airdrop(key, 1))
       iex> is_binary(signature)
       true
 
-  """
-  @spec client(map) :: client
-  def client(config = %{}) do
-    middleware = [
-      {Tesla.Middleware.BaseUrl, url(config)},
-      RPC.Middleware,
-      Tesla.Middleware.JSON,
-      {Tesla.Middleware.Retry, retry_opts(config)}
-    ]
+  ## Options
 
-    Tesla.client(middleware, Map.get(config, :adapter, Tesla.Adapter.Httpc))
+  #{NimbleOptions.docs(@client_schema)}
+  """
+  @spec client(keyword) :: client
+  def client(opts) do
+    case validate(opts, @client_schema) do
+      {:ok, config} ->
+        middleware = [
+          {Tesla.Middleware.BaseUrl, config.network},
+          RPC.Middleware,
+          Tesla.Middleware.JSON,
+          {Tesla.Middleware.Retry, retry_opts(config)}
+        ]
+
+        Tesla.client(middleware, config.adapter)
+
+      error ->
+        error
+    end
   end
 
   @doc """
@@ -95,15 +122,24 @@ defmodule Solana.RPC do
     end
   end
 
-  defp url(%{network: network}) when network in ["devnet", "mainnet-beta", "testnet"] do
-    "https://api.#{network}.solana.com"
+  @doc false
+  def cluster_url(network) when network in ["devnet", "mainnet-beta", "testnet"] do
+    {:ok, "https://api.#{network}.solana.com"}
   end
 
-  defp url(%{network: "localhost"}), do: "http://127.0.0.1:8899"
-  defp url(%{network: other}), do: other
+  def cluster_url("localhost"), do: {:ok, "http://127.0.0.1:8899"}
 
-  defp retry_opts(config) do
-    Keyword.merge(retry_defaults(), Map.get(config, :retry_options, []))
+  def cluster_url(other) when is_binary(other) do
+    case URI.parse(other) do
+      %{scheme: nil, host: nil} -> {:error, "invalid cluster"}
+      _ -> {:ok, other}
+    end
+  end
+
+  def cluster_url(_), do: {:error, "invalid cluster"}
+
+  defp retry_opts(%{retry_options: retry_options}) do
+    Keyword.merge(retry_defaults(), retry_options)
   end
 
   defp retry_defaults() do
