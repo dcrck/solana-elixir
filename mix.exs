@@ -64,7 +64,38 @@ defmodule Solana.MixProject do
     [
       main: "readme",
       source_url: @source_url,
-      extras: ["README.md", "LICENSE"]
+      extras: ["README.md", "LICENSE"],
+      groups_for_modules: [
+        Client: [
+          Solana.RPC,
+          Solana.RPC.Request,
+          Solana.RPC.Tracker
+        ],
+        Transactions: [
+          Solana.Transaction,
+          Solana.Instruction,
+          Solana.Account,
+          Solana.Key
+        ],
+        "System Program": [
+          Solana.SystemProgram,
+          Solana.SystemProgram.Nonce
+        ],
+        SPL: [
+          Solana.SPL.AssociatedToken,
+          Solana.SPL.Token,
+          Solana.SPL.Token.Mint,
+          Solana.SPL.Token.MultiSig
+        ],
+        Testing: [
+          Solana.TestValidator
+        ]
+      ],
+      nest_modules_by_prefix: [
+        Solana.RPC,
+        Solana.SPL.Token,
+        Solana.SystemProgram
+      ]
     ]
   end
 end
