@@ -6,6 +6,7 @@ defmodule Solana.SPL.Token do
   alias Solana.{Instruction, Account, SystemProgram}
   import Solana.Helpers
 
+  @typedoc "token account information"
   @type t :: %__MODULE__{
           mint: Solana.key(),
           owner: Solana.key(),
@@ -41,7 +42,7 @@ defmodule Solana.SPL.Token do
   def id(), do: Solana.pubkey!("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
 
   @doc """
-  The size of a token account.
+  The size of a serialized token account.
   """
   @spec byte_size() :: pos_integer
   def byte_size(), do: 165

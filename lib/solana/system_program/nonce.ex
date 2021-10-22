@@ -1,9 +1,27 @@
 defmodule Solana.SystemProgram.Nonce do
+  @moduledoc """
+  Functions for interacting with the [System
+  Program](https://docs.solana.com/developing/runtime-facilities/programs#system-program)'s
+  nonce accounts, required for [durable transaction
+  nonces](https://docs.solana.com/offline-signing/durable-nonce).
+
+  These accounts can be useful for offline transactions, as well as transactions
+  that require more time to generate a transaction signature than the normal
+  `recent_blockhash` transaction mechanism gives them (~2 minutes).
+  """
   alias Solana.{Instruction, Account, SystemProgram}
   import Solana.Helpers
 
+  @doc """
+  The size of a serialized nonce account.
+  """
   def byte_size(), do: 80
 
+  @doc """
+  Translates the result of a `Solana.RPC.Request.get_account_info/2` into a
+  nonce account's information.
+  """
+  @spec from_account_info(info :: map) :: map | :error
   def from_account_info(%{"data" => %{"parsed" => %{"info" => info}}}) do
     from_nonce_account_info(info)
   end
@@ -24,21 +42,27 @@ defmodule Solana.SystemProgram.Nonce do
 
   defp from_nonce_account_info(_), do: :error
 
-  def init(opts) do
-    schema = [
-      nonce: [
-        type: {:custom, Solana.Key, :check, []},
-        required: true,
-        doc: "Public key of the nonce account"
-      ],
-      authority: [
-        type: {:custom, Solana.Key, :check, []},
-        required: true,
-        doc: "Public key of the nonce authority"
-      ]
+  @init_schema [
+    nonce: [
+      type: {:custom, Solana.Key, :check, []},
+      required: true,
+      doc: "Public key of the nonce account"
+    ],
+    authority: [
+      type: {:custom, Solana.Key, :check, []},
+      required: true,
+      doc: "Public key of the nonce authority"
     ]
+  ]
+  @doc """
+  Generates the instructions for initializing a nonce account.
 
-    case validate(opts, schema) do
+  ## Options
+
+  #{NimbleOptions.docs(@init_schema)}
+  """
+  def init(opts) do
+    case validate(opts, @init_schema) do
       {:ok, params} ->
         %Instruction{
           program: SystemProgram.id(),
@@ -55,26 +79,32 @@ defmodule Solana.SystemProgram.Nonce do
     end
   end
 
-  def authorize(opts) do
-    schema = [
-      nonce: [
-        type: {:custom, Solana.Key, :check, []},
-        required: true,
-        doc: "Public key of the nonce account"
-      ],
-      authority: [
-        type: {:custom, Solana.Key, :check, []},
-        required: true,
-        doc: "Public key of the nonce authority"
-      ],
-      new_authority: [
-        type: {:custom, Solana.Key, :check, []},
-        required: true,
-        doc: "Public key to set as the new nonce authority"
-      ]
+  @authorize_schema [
+    nonce: [
+      type: {:custom, Solana.Key, :check, []},
+      required: true,
+      doc: "Public key of the nonce account"
+    ],
+    authority: [
+      type: {:custom, Solana.Key, :check, []},
+      required: true,
+      doc: "Public key of the nonce authority"
+    ],
+    new_authority: [
+      type: {:custom, Solana.Key, :check, []},
+      required: true,
+      doc: "Public key to set as the new nonce authority"
     ]
+  ]
+  @doc """
+  Generates the instructions for re-assigning the authority of a nonce account.
 
-    case validate(opts, schema) do
+  ## Options
+
+  #{NimbleOptions.docs(@authorize_schema)}
+  """
+  def authorize(opts) do
+    case validate(opts, @authorize_schema) do
       {:ok, params} ->
         %Instruction{
           program: SystemProgram.id(),
@@ -90,21 +120,27 @@ defmodule Solana.SystemProgram.Nonce do
     end
   end
 
-  def advance(opts) do
-    schema = [
-      nonce: [
-        type: {:custom, Solana.Key, :check, []},
-        required: true,
-        doc: "Public key of the nonce account"
-      ],
-      authority: [
-        type: {:custom, Solana.Key, :check, []},
-        required: true,
-        doc: "Public key of the nonce authority"
-      ]
+  @advance_schema [
+    nonce: [
+      type: {:custom, Solana.Key, :check, []},
+      required: true,
+      doc: "Public key of the nonce account"
+    ],
+    authority: [
+      type: {:custom, Solana.Key, :check, []},
+      required: true,
+      doc: "Public key of the nonce authority"
     ]
+  ]
+  @doc """
+  Generates the instructions for advancing a nonce account's stored nonce value.
 
-    case validate(opts, schema) do
+  ## Options
+
+  #{NimbleOptions.docs(@advance_schema)}
+  """
+  def advance(opts) do
+    case validate(opts, @advance_schema) do
       {:ok, params} ->
         %Instruction{
           program: SystemProgram.id(),
@@ -121,31 +157,37 @@ defmodule Solana.SystemProgram.Nonce do
     end
   end
 
-  def withdraw(opts) do
-    schema = [
-      nonce: [
-        type: {:custom, Solana.Key, :check, []},
-        required: true,
-        doc: "Public key of the nonce account"
-      ],
-      authority: [
-        type: {:custom, Solana.Key, :check, []},
-        required: true,
-        doc: "Public key of the nonce authority"
-      ],
-      to: [
-        type: {:custom, Solana.Key, :check, []},
-        required: true,
-        doc: "Public key of the account which will get the withdrawn lamports"
-      ],
-      lamports: [
-        type: :pos_integer,
-        required: true,
-        doc: "Amount of lamports to transfer to the created account"
-      ]
+  @withdraw_schema [
+    nonce: [
+      type: {:custom, Solana.Key, :check, []},
+      required: true,
+      doc: "Public key of the nonce account"
+    ],
+    authority: [
+      type: {:custom, Solana.Key, :check, []},
+      required: true,
+      doc: "Public key of the nonce authority"
+    ],
+    to: [
+      type: {:custom, Solana.Key, :check, []},
+      required: true,
+      doc: "Public key of the account which will get the withdrawn lamports"
+    ],
+    lamports: [
+      type: :pos_integer,
+      required: true,
+      doc: "Amount of lamports to transfer to the created account"
     ]
+  ]
+  @doc """
+  Generates the instructions for withdrawing funds form a nonce account.
 
-    case validate(opts, schema) do
+  ## Options
+
+  #{NimbleOptions.docs(@withdraw_schema)}
+  """
+  def withdraw(opts) do
+    case validate(opts, @withdraw_schema) do
       {:ok, params} ->
         %Instruction{
           program: SystemProgram.id(),

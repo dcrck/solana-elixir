@@ -1,7 +1,12 @@
 defmodule Solana.SPL.Token.Mint do
+  @moduledoc """
+  Functions for interacting with the mint accounts of Solana's [Token
+  Program](https://spl.solana.com/token).
+  """
   alias Solana.{Instruction, Account, SPL.Token, SystemProgram}
   import Solana.Helpers
 
+  @typedoc "token mint account information"
   @type t :: %__MODULE__{
           authority: Solana.key() | nil,
           supply: non_neg_integer,
@@ -18,11 +23,16 @@ defmodule Solana.SPL.Token.Mint do
     initialized?: false
   ]
 
+  @doc """
+  The size of a serialized token mint account.
+  """
+  @spec byte_size() :: pos_integer
   def byte_size(), do: 82
 
   @doc """
   Translates the result of a `get_account_info` RPC API call into a `Mint`.
   """
+  @spec from_account_info(info :: map) :: t | :error
   def from_account_info(%{"data" => %{"parsed" => %{"type" => "mint", "info" => info}}}) do
     case {from_mint_account_info(info), info["freezeAuthority"]} do
       {:error, _} -> :error
@@ -49,42 +59,45 @@ defmodule Solana.SPL.Token.Mint do
 
   defp from_mint_account_info(_), do: :error
 
+  @init_schema [
+    payer: [
+      type: {:custom, Solana.Key, :check, []},
+      required: true,
+      doc: "The account that will pay for the mint creation"
+    ],
+    balance: [
+      type: :non_neg_integer,
+      required: true,
+      doc: "The lamport balance the mint account should have"
+    ],
+    decimals: [
+      type: {:in, 0..255},
+      required: true,
+      doc: "decimals for the new mint"
+    ],
+    authority: [
+      type: {:custom, Solana.Key, :check, []},
+      required: true,
+      doc: "authority for the new mint"
+    ],
+    freeze_authority: [
+      type: {:custom, Solana.Key, :check, []},
+      doc: "freeze authority for the new mint"
+    ],
+    new: [
+      type: {:custom, Solana.Key, :check, []},
+      required: true,
+      doc: "public key for the new mint"
+    ]
+  ]
   @doc """
-  Genereates the instructions to initialize a `Mint`.
+  Genereates the instructions to initialize a `Solana.SPL.Token.Mint.t`.
+
+  ## Options
+
+  #{NimbleOptions.docs(@init_schema)}
   """
   def init(opts) do
-    schema = [
-      payer: [
-        type: {:custom, Solana.Key, :check, []},
-        required: true,
-        doc: "The account that will pay for the mint creation"
-      ],
-      balance: [
-        type: :non_neg_integer,
-        required: true,
-        doc: "The lamport balance the mint account should have"
-      ],
-      decimals: [
-        type: {:in, 0..255},
-        required: true,
-        doc: "decimals for the new mint"
-      ],
-      authority: [
-        type: {:custom, Solana.Key, :check, []},
-        required: true,
-        doc: "authority for the new mint"
-      ],
-      freeze_authority: [
-        type: {:custom, Solana.Key, :check, []},
-        doc: "freeze authority for the new mint"
-      ],
-      new: [
-        type: {:custom, Solana.Key, :check, []},
-        required: true,
-        doc: "public key for the new mint"
-      ]
-    ]
-
     case validate(opts, schema) do
       {:ok, params} ->
         [

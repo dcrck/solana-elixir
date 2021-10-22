@@ -11,6 +11,7 @@ defmodule Solana.SPL.Token.MultiSig do
   alias Solana.{Instruction, Account, SPL.Token, SystemProgram}
   import Solana.Helpers
 
+  @typedoc "multi-signature account information"
   @type t :: %__MODULE__{
           signers_required: byte,
           signers_total: byte,
@@ -23,8 +24,14 @@ defmodule Solana.SPL.Token.MultiSig do
             initialized?: false,
             signers: []
 
+  @doc "The size of a serialized multi-signature account."
   def byte_size(), do: 355
 
+  @doc """
+  Translates the result of a `Solana.RPC.Request.get_account_info/2` into a
+  `t:Solana.SPL.Token.MultiSig.t`.
+  """
+  @spec from_account_info(info :: map) :: t | :error
   def from_account_info(%{"data" => %{"parsed" => %{"info" => info}}}) do
     from_multisig_account_info(info)
   end
@@ -47,41 +54,45 @@ defmodule Solana.SPL.Token.MultiSig do
 
   defp from_multisig_account_info(_), do: :error
 
+  @init_schema [
+    payer: [
+      type: {:custom, Solana.Key, :check, []},
+      required: true,
+      doc: "The account that will pay for the multisig creation"
+    ],
+    balance: [
+      type: :non_neg_integer,
+      required: true,
+      doc: "The lamport balance the multisig account should have"
+    ],
+    signers: [
+      type: {:list, {:custom, Solana.Key, :check, []}},
+      required: true,
+      doc: "The full set of signers"
+    ],
+    signatures_required: [
+      type: {:in, 1..11},
+      required: true,
+      doc: "number of signatures required"
+    ],
+    new: [
+      type: {:custom, Solana.Key, :check, []},
+      required: true,
+      doc: "public key for the new multisig account"
+    ]
+  ]
+
   @doc """
   Creates the instructions to initialize a multisignature account with N
   provided signers. **These instructions must be included in the same
   Transaction.**
+
+  ## Options
+
+  #{NimbleOptions.docs(@init_schema)}
   """
   def init(opts) do
-    schema = [
-      payer: [
-        type: {:custom, Solana.Key, :check, []},
-        required: true,
-        doc: "The account that will pay for the multisig creation"
-      ],
-      balance: [
-        type: :non_neg_integer,
-        required: true,
-        doc: "The lamport balance the multisig account should have"
-      ],
-      signers: [
-        type: {:list, {:custom, Solana.Key, :check, []}},
-        required: true,
-        doc: "The full set of signers"
-      ],
-      signatures_required: [
-        type: {:in, 1..11},
-        required: true,
-        doc: "number of signatures required"
-      ],
-      new: [
-        type: {:custom, Solana.Key, :check, []},
-        required: true,
-        doc: "public key for the new multisig account"
-      ]
-    ]
-
-    case validate(opts, schema) do
+    case validate(opts, @init_schema) do
       {:ok, params} ->
         [
           SystemProgram.create_account(

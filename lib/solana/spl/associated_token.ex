@@ -12,6 +12,9 @@ defmodule Solana.SPL.AssociatedToken do
   alias Solana.{SPL.Token, Key, Instruction, Account, SystemProgram}
   import Solana.Helpers
 
+  @doc """
+  The Associated Token Account's Program ID
+  """
   def id(), do: Solana.pubkey!("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL")
 
   @doc """
