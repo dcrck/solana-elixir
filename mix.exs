@@ -1,14 +1,22 @@
 defmodule Solana.MixProject do
   use Mix.Project
 
+  @source_url "https://git.sr.ht/~dcrck/solana"
+
   def project do
     [
       app: :solana,
+      description: description(),
       version: "0.1.0",
       elixir: "~> 1.12",
+      package: package(),
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      name: "Solana",
+      source_url: @source_url,
+      homepage_url: @source_url,
+      deps: deps(),
+      docs: docs()
     ]
   end
 
@@ -21,6 +29,19 @@ defmodule Solana.MixProject do
   def elixirc_paths(:test), do: ["lib", "test/support"]
   def elixirc_paths(_), do: ["lib"]
 
+  defp description do
+    "A library for interacting with the Solana blockchain."
+  end
+
+  defp package do
+    [
+      name: "solana",
+      maintainers: ["Derek Meer"],
+      licenses: ["MIT"],
+      links: %{"SourceHut" => "https://git.sr.ht/~dcrck/solana"}
+    ]
+  end
+
   defp deps do
     [
       # base client
@@ -32,7 +53,18 @@ defmodule Solana.MixProject do
       # base58 encoding
       {:basefiftyeight, "~> 0.1.0"},
       # validating parameters
-      {:nimble_options, git: "git://github.com/dashbitco/nimble_options.git"}
+      {:nimble_options, git: "git://github.com/dashbitco/nimble_options.git"},
+      # docs and testing
+      {:ex_doc, "~> 0.25.5", only: :dev, runtime: false},
+      {:dialyxir, "~> 1.0", only: [:dev, :test], runtime: false}
+    ]
+  end
+
+  defp docs do
+    [
+      main: "readme",
+      source_url: @source_url,
+      extras: ["README.md", "LICENSE"],
     ]
   end
 end
