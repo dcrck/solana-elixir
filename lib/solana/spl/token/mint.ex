@@ -98,7 +98,7 @@ defmodule Solana.SPL.Token.Mint do
   #{NimbleOptions.docs(@init_schema)}
   """
   def init(opts) do
-    case validate(opts, schema) do
+    case validate(opts, @init_schema) do
       {:ok, params} ->
         [
           SystemProgram.create_account(
