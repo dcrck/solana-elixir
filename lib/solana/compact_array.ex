@@ -11,7 +11,7 @@ defmodule Solana.CompactArray do
   end
 
   def to_iolist(bin) when is_binary(bin) do
-    [encode_length(byte_size(bin)) | bin]
+    [encode_length(byte_size(bin)) | [bin]]
   end
 
   @spec encode_length(length :: non_neg_integer) :: list
