@@ -1,13 +1,11 @@
 defmodule Solana.SPL.AssociatedToken do
   @moduledoc """
-  Functions for interacting with the Associated Token Account program.
+  Functions for interacting with the [Associated Token Account
+  Program](https://spl.solana.com/associated-token-account).
 
   An associated token account's address is derived from a user's main system
   account and the token mint, which means each user can only have one associated
   token account per token.
-
-  To learn more about why this is important, check out the [Solana
-  documentation](https://github.com/solana-labs/solana-program-library/blob/master/docs/src/associated-token-account.md)
   """
   alias Solana.{SPL.Token, Key, Instruction, Account, SystemProgram}
   import Solana.Helpers
