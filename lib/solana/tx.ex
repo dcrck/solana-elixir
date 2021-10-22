@@ -1,7 +1,7 @@
 defmodule Solana.Transaction do
   @moduledoc """
   Functions for building and encoding Solana
-  [Transactions](https://docs.solana.com/developing/programming-model/transactions)
+  [transactions](https://docs.solana.com/developing/programming-model/transactions)
   """
   require Logger
   alias Solana.{Account, CompactArray, Instruction}
