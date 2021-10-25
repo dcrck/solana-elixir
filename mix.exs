@@ -48,8 +48,8 @@ defmodule Solana.MixProject do
       {:tesla, "~> 1.4.0"},
       # json library
       {:jason, ">= 1.0.0"},
-      # keys and signatures (use this one until my changes get merged)
-      {:ed25519, git: "git://github.com/dcrck/ed25519_ex.git"},
+      # keys and signatures
+      {:ed25519, "~> 1.3"},
       # base58 encoding
       {:basefiftyeight, "~> 0.1.0"},
       # validating parameters
