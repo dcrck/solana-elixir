@@ -3,15 +3,18 @@
 The unofficial Elixir package for interacting with the
 [Solana](https://solana.com) blockchain.
 
+> Note that this README refers to the master branch of `solana`, not the latest
+> released version on Hex. See [the documentation](https://hexdocs.pm/solana)
+> for the documentation of the version you're using.
+
 ## Installation
 
-This package isn't available on Hex yet due to some outstanding PRs on
-dependency libraries, so you'll need to add the Git repository to your `deps/0`:
+Add `solana` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
   [
-    {:solana, git: "https://git.sr.ht/~dcrck/solana"}
+    {:solana, "~> 0.1.0"}
   ]
 end
 ```
