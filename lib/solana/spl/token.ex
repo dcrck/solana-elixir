@@ -206,7 +206,7 @@ defmodule Solana.SPL.Token do
       """
     ],
     decimals: [
-      type: {:in, 0..255},
+      type: {:custom, Solana.SPL.Helpers, :in?, [0, 255]},
       doc: "The number of decimals in the `amount`. Only used if `checked?` is true."
     ],
     mint: [
@@ -297,7 +297,7 @@ defmodule Solana.SPL.Token do
       """
     ],
     decimals: [
-      type: {:in, 0..255},
+      type: {:custom, Solana.SPL.Helpers, :in?, [0, 255]},
       doc: "The number of decimals in the `amount`. Only used if `checked?` is true."
     ],
     mint: [
@@ -489,7 +489,7 @@ defmodule Solana.SPL.Token do
       """
     ],
     decimals: [
-      type: {:in, 0..255},
+      type: {:custom, Solana.SPL.Helpers, :in?, [0, 255]},
       doc: "The number of decimals in the `amount`. Only used if `checked?` is true."
     ]
   ]
@@ -568,7 +568,7 @@ defmodule Solana.SPL.Token do
       """
     ],
     decimals: [
-      type: {:in, 0..255},
+      type: {:custom, Solana.SPL.Helpers, :in?, [0, 255]},
       doc: "The number of decimals in the `amount`. Only used if `checked?` is true."
     ]
   ]

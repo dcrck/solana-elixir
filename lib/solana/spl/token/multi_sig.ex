@@ -72,7 +72,7 @@ defmodule Solana.SPL.Token.MultiSig do
       doc: "The full set of signers; should be a list of 11 members or fewer"
     ],
     signatures_required: [
-      type: {:in, 1..11},
+      type: {:custom, Solana.SPL.Helpers, :in?, [1, 11]},
       required: true,
       doc: "number of signatures required; should be between 1 and 11 (inclusive)"
     ],
