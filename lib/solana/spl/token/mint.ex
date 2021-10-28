@@ -74,7 +74,7 @@ defmodule Solana.SPL.Token.Mint do
       doc: "The lamport balance the mint account should have"
     ],
     decimals: [
-      type: {:custom, Solana.SPL.Helpers, :in?, [0, 255]},
+      type: {:in, 0..255},
       required: true,
       doc: "decimals for the new mint"
     ],

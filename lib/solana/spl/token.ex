@@ -185,7 +185,6 @@ defmodule Solana.SPL.Token do
     owner: [
       type: {:custom, Solana.Key, :check, []},
       required: true,
-      rename_to: :authority,
       doc: "The owner of `from`"
     ],
     multi_signers: [
@@ -206,7 +205,7 @@ defmodule Solana.SPL.Token do
       """
     ],
     decimals: [
-      type: {:custom, Solana.SPL.Helpers, :in?, [0, 255]},
+      type: {:in, 0..255},
       doc: "The number of decimals in the `amount`. Only used if `checked?` is true."
     ],
     mint: [
@@ -276,7 +275,6 @@ defmodule Solana.SPL.Token do
     owner: [
       type: {:custom, Solana.Key, :check, []},
       required: true,
-      rename_to: :authority,
       doc: "The account which owns `source`"
     ],
     multi_signers: [
@@ -297,7 +295,7 @@ defmodule Solana.SPL.Token do
       """
     ],
     decimals: [
-      type: {:custom, Solana.SPL.Helpers, :in?, [0, 255]},
+      type: {:in, 0..255},
       doc: "The number of decimals in the `amount`. Only used if `checked?` is true."
     ],
     mint: [
@@ -361,7 +359,6 @@ defmodule Solana.SPL.Token do
     owner: [
       type: {:custom, Solana.Key, :check, []},
       required: true,
-      rename_to: :authority,
       doc: "The account which owns `source`"
     ],
     multi_signers: [
@@ -489,7 +486,7 @@ defmodule Solana.SPL.Token do
       """
     ],
     decimals: [
-      type: {:custom, Solana.SPL.Helpers, :in?, [0, 255]},
+      type: {:in, 0..255},
       doc: "The number of decimals in the `amount`. Only used if `checked?` is true."
     ]
   ]
@@ -547,7 +544,6 @@ defmodule Solana.SPL.Token do
     owner: [
       type: {:custom, Solana.Key, :check, []},
       required: true,
-      rename_to: :authority,
       doc: "the owner of `token`"
     ],
     amount: [
@@ -568,7 +564,7 @@ defmodule Solana.SPL.Token do
       """
     ],
     decimals: [
-      type: {:custom, Solana.SPL.Helpers, :in?, [0, 255]},
+      type: {:in, 0..255},
       doc: "The number of decimals in the `amount`. Only used if `checked?` is true."
     ]
   ]
@@ -755,6 +751,13 @@ defmodule Solana.SPL.Token do
       error ->
         error
     end
+  end
+
+  defp signer_accounts(params = %{owner: owner}) do
+    params
+    |> Map.delete(:owner)
+    |> Map.put(:authority, owner)
+    |> signer_accounts()
   end
 
   defp signer_accounts(%{multi_signers: signers, authority: authority}) do
