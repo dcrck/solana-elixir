@@ -99,6 +99,6 @@ interface to your programs.
 Once you've built your custom program's client, you should probably write some
 tests for it. `solana` provides example tests for the interfaces listed above,
 along with an Elixir-managed [Solana Test
-Validator](https://docs.solana.com/developing/test-validator) process for fast
-local instruction testing. See `Solana.TestValidator` for more details about how
-to set this up.
+Validator](https://docs.solana.com/developing/test-validator) process to test
+your program locally. See `Solana.TestValidator` for more details about how to
+set this up.

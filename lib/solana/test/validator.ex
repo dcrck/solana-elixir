@@ -12,9 +12,12 @@ defmodule Solana.TestValidator do
 
   ## How to Use
 
-  Add the following lines to the beginning of your `test/test_helper.exs` file:
+  You can use the `Solana.TestValidator` directly or in a supervision tree.
 
-  ```
+  To use it directly, add the following lines to the beginning of your
+  `test/test_helper.exs` file:
+
+  ```elixir
   alias Solana.TestValidator
   {:ok, validator} = TestValidator.start_link(ledger: "/tmp/test-ledger")
   ExUnit.after_suite(fn _ -> TestValidator.stop(validator) end)
@@ -23,18 +26,57 @@ defmodule Solana.TestValidator do
   This will start and stop the `solana-test-validator` before and after your
   tests run.
 
+  ### In a supervision tree
+
+  Alternatively, you can add it to your application's supervision tree during
+  tests. Modify your `mix.exs` file to make the current environment available to
+  your application:
+
+  ```elixir
+  def application do
+    [mod: {MyApp, env: Mix.env()}]
+  end
+  ```
+
+  Then, adjust your application's `children` depending on the environment:
+
+  ```elixir
+  defmodule MyApp do
+    use Application
+
+    def start(_type, env: env) do
+      Supervisor.start_link(children(env), strategy: :one_for_one)
+    end
+
+    defp children(:test) do
+      [
+        {Solana.TestValidator, ledger: "/tmp/test_ledger"},
+        # ... other children
+      ]
+    end
+
+    defp children(_) do
+      # ...other children
+    end
+  end
+  ```
+
   ### Options
 
   You can pass any of the **long-form** options you would pass to a
-  `solana-test-validator` here. See `Solana.TestValidator.start_link/1` for more
-  details.
+  `solana-test-validator` here.
+
+  For example, to add your own program to the validator, set the `bpf_program`
+  option as the path to your program's [build
+  artifact](https://docs.solana.com/developing/on-chain-programs/developing-rust#how-to-build).
+  See `Solana.TestValidator.start_link/1` for more details.
   """
   use GenServer
   require Logger
 
   @schema [
     bind_address: [type: :string, default: "0.0.0.0"],
-    bpf_program: [type: :string],
+    bpf_program: [type: {:or, [:string, {:list, :string}]}],
     clone: [type: {:custom, Solana, :pubkey, []}],
     config: [type: :string, default: Path.expand("~/.config/solana/cli/config.yml")],
     dynamic_port_range: [type: :string, default: "1024-65535"],
@@ -113,12 +155,19 @@ defmodule Solana.TestValidator do
   defp to_arg_list(args) do
     args
     |> Enum.map(fn {k, v} -> {Atom.to_string(k), v} end)
-    |> Enum.reject(fn {k, _} -> byte_size(k) == 1 end)
+    |> Enum.map(&handle_multiples/1)
+    |> List.flatten()
     |> Enum.map(fn {k, v} -> ["--", String.replace(k, "_", "-"), " ", to_string(v), " "] end)
     |> IO.iodata_to_binary()
     |> String.trim()
     |> String.split()
   end
+
+  defp handle_multiples({name, list}) when is_list(list) do
+    Enum.map(list, &{name, &1})
+  end
+
+  defp handle_multiples(other), do: other
 
   @doc false
   def terminate(reason, %{port: port}) do
