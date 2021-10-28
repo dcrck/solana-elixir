@@ -49,20 +49,7 @@ defmodule Solana.CompactArray do
       rest::binary
     >> = encoded
 
-    {chunk(data, item_size), rest, length}
-  end
-
-  defp chunk(string, size), do: chunk(string, size, [])
-
-  defp chunk(<<>>, _size, acc), do: Enum.reverse(acc)
-
-  defp chunk(string, size, acc) when byte_size(string) > size do
-    <<c::size(size)-binary, rest::binary>> = string
-    chunk(rest, size, [c | acc])
-  end
-
-  defp chunk(leftover, size, acc) do
-    chunk(<<>>, size, [leftover | acc])
+    {Solana.Helpers.chunk(data, item_size), rest, length}
   end
 
   def decode_length(bytes), do: decode_length(bytes, 0)
