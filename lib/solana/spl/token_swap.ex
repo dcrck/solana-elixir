@@ -6,13 +6,50 @@ defmodule Solana.SPL.TokenSwap do
   alias Solana.{Instruction, Account, SystemProgram}
   import Solana.Helpers
 
-  @curves [:constant_product, :constant_price, :stable, :offset]
+  @curves [:produce, :price, :stable, :offset]
 
   @doc """
   The Token Swap Program's ID.
   """
   @spec id() :: binary
   def id(), do: Solana.pubkey!("SwaPpA9LAaLfeLi3a68M4DjnLqgtticKg6CnyNwgAC8")
+
+  def from_account_info(%{"data" => [data, "base64"]}) do
+    case Base.decode64(data) do
+      {:ok, decoded} when byte_size(decoded) == 324 ->
+        [<<vsn>>, <<init>>, <<seed>>, keys, fees, <<type>>, <<params::integer-size(256)-little>>] =
+          chunk(decoded, [1, 1, 1, 7 * 32, 8 * 8, 1, 32])
+
+        [_, token_a, token_b, pool_mint, mint_a, mint_b, fee_account] = chunk(keys, 32)
+
+        [trade_fee, owner_trade_fee, owner_withdraw_fee, host_fee] =
+          fees
+          |> chunk(8)
+          |> Enum.map(fn <<n::integer-size(64)-little>> -> n end)
+          |> Enum.chunk_every(2)
+          |> Enum.map(&List.to_tuple/1)
+
+        %{
+          token_a: token_a,
+          token_b: token_b,
+          trade_fee: trade_fee,
+          owner_trade_fee: owner_trade_fee,
+          owner_withdraw_fee: owner_withdraw_fee,
+          host_fee: host_fee,
+          pool_mint: pool_mint,
+          mint_a: mint_a,
+          mint_b: mint_b,
+          fee_account: fee_account,
+          version: vsn,
+          initialized?: init == 1,
+          bump_seed: seed,
+          curve: {Enum.at(@curves, type), params}
+        }
+
+      _other ->
+        :error
+    end
+  end
 
   @doc """
   The size of a serialized token swap account.
@@ -22,13 +59,13 @@ defmodule Solana.SPL.TokenSwap do
 
   @doc false
   def validate_fee(f = {n, d})
-  when is_integer(n) and n > 0 and is_integer(d) and d > 0 do
+      when is_integer(n) and n > 0 and is_integer(d) and d > 0 do
     {:ok, f}
   end
 
   def validate_fee({_n, 0}), do: {:error, "fee denominator cannot be 0"}
 
-  def validate_fee(f), do: {:error, "expected a fee, got: #{inspect f}"}
+  def validate_fee(f), do: {:error, "expected a fee, got: #{inspect(f)}"}
 
   @doc false
   def validate_curve({type, params}) when type in @curves do
@@ -36,7 +73,7 @@ defmodule Solana.SPL.TokenSwap do
   end
 
   def validate_curve(c) do
-    {:error, "expected a curve in #{inspect @curves}, got: #{inspect c}"}
+    {:error, "expected a curve in #{inspect(@curves)}, got: #{inspect(c)}"}
   end
 
   @init_schema [
@@ -128,7 +165,7 @@ defmodule Solana.SPL.TokenSwap do
       Should take the form `{type, params}. See [the
       docs](https://spl.solana.com/token-swap#curves) on which curves are available.
       """
-    ],
+    ]
   ]
   @doc """
   Creates the instructions which initialize a new token swap account.
@@ -167,7 +204,7 @@ defmodule Solana.SPL.TokenSwap do
         %Account{key: params.pool_mint, writable?: true},
         %Account{key: params.fee_account},
         %Account{key: params.pool, writable?: true},
-        %Account{key: Solana.SPL.Token.id()},
+        %Account{key: Solana.SPL.Token.id()}
       ],
       data: Instruction.encode_data(initialize_data(params))
     }
@@ -180,8 +217,8 @@ defmodule Solana.SPL.TokenSwap do
       encode_fee(params.owner_trade_fee),
       encode_fee(params.owner_withdraw_fee),
       encode_fee(params.host_fee),
-      Enum.find_index(@curves, & &1 == type),
-      {parameters, 32*8}
+      Enum.find_index(@curves, &(&1 == type)),
+      {parameters, 32 * 8}
     ]
     |> List.flatten()
   end
@@ -261,21 +298,23 @@ defmodule Solana.SPL.TokenSwap do
       {:ok, params} ->
         %Instruction{
           program: id(),
-          accounts: List.flatten([
-            %Account{key: params.swap},
-            %Account{key: params.authority},
-            %Account{key: params.user_authority, signer?: true},
-            %Account{key: params.user_source, writable?: true},
-            %Account{key: params.pool_source, writable?: true},
-            %Account{key: params.pool_destination, writable?: true},
-            %Account{key: params.user_destination, writable?: true},
-            %Account{key: params.pool_mint, writable?: true},
-            %Account{key: params.fee_account, writable?: true},
-            %Account{key: Solana.SPL.Token.id()},
-            host_fee_account(params)
-          ]),
+          accounts:
+            List.flatten([
+              %Account{key: params.swap},
+              %Account{key: params.authority},
+              %Account{key: params.user_authority, signer?: true},
+              %Account{key: params.user_source, writable?: true},
+              %Account{key: params.pool_source, writable?: true},
+              %Account{key: params.pool_destination, writable?: true},
+              %Account{key: params.user_destination, writable?: true},
+              %Account{key: params.pool_mint, writable?: true},
+              %Account{key: params.fee_account, writable?: true},
+              %Account{key: Solana.SPL.Token.id()},
+              host_fee_account(params)
+            ]),
           data: Instruction.encode_data([1, {params.amount, 64}, {params.mimimum_return, 64}])
         }
+
       error ->
         error
     end
@@ -347,7 +386,7 @@ defmodule Solana.SPL.TokenSwap do
       type: :pos_integer,
       required: true,
       doc: "Amount of pool tokens to mint."
-    ],
+    ]
   ]
   @doc """
   Deposits both `A` and `B` tokens into the pool.
@@ -361,20 +400,28 @@ defmodule Solana.SPL.TokenSwap do
       {:ok, params} ->
         %Instruction{
           program: id(),
-          accounts: List.flatten([
-            %Account{key: params.swap},
-            %Account{key: params.authority},
-            %Account{key: params.user_authority, signer?: true},
-            %Account{key: params.user_a, writable?: true},
-            %Account{key: params.user_b, writable?: true},
-            %Account{key: params.swap_a, writable?: true},
-            %Account{key: params.swap_b, writable?: true},
-            %Account{key: params.swap_pool, writable?: true},
-            %Account{key: params.user_pool, writable?: true},
-            %Account{key: Solana.SPL.Token.id()},
-          ]),
-          data: Instruction.encode_data([2, {params.amount_pool, 64}, {params.amount_a, 64}, {params.amount_b, 64}])
+          accounts:
+            List.flatten([
+              %Account{key: params.swap},
+              %Account{key: params.authority},
+              %Account{key: params.user_authority, signer?: true},
+              %Account{key: params.user_a, writable?: true},
+              %Account{key: params.user_b, writable?: true},
+              %Account{key: params.swap_a, writable?: true},
+              %Account{key: params.swap_b, writable?: true},
+              %Account{key: params.swap_pool, writable?: true},
+              %Account{key: params.user_pool, writable?: true},
+              %Account{key: Solana.SPL.Token.id()}
+            ]),
+          data:
+            Instruction.encode_data([
+              2,
+              {params.amount_pool, 64},
+              {params.amount_a, 64},
+              {params.amount_b, 64}
+            ])
         }
+
       error ->
         error
     end
@@ -445,7 +492,7 @@ defmodule Solana.SPL.TokenSwap do
       type: :pos_integer,
       required: true,
       doc: "Amount of pool tokens to burn."
-    ],
+    ]
   ]
   @doc """
   Withdraws both `A` and `B` tokens from the pool.
@@ -459,21 +506,29 @@ defmodule Solana.SPL.TokenSwap do
       {:ok, params} ->
         %Instruction{
           program: id(),
-          accounts: List.flatten([
-            %Account{key: params.swap},
-            %Account{key: params.authority},
-            %Account{key: params.user_authority, signer?: true},
-            %Account{key: params.pool_mint, writable?: true},
-            %Account{key: params.user_pool, writable?: true},
-            %Account{key: params.swap_a, writable?: true},
-            %Account{key: params.swap_b, writable?: true},
-            %Account{key: params.user_a, writable?: true},
-            %Account{key: params.user_b, writable?: true},
-            %Account{key: params.fee_account, writable?: true},
-            %Account{key: Solana.SPL.Token.id()},
-          ]),
-          data: Instruction.encode_data([3, {params.amount_pool, 64}, {params.amount_a, 64}, {params.amount_b, 64}])
+          accounts:
+            List.flatten([
+              %Account{key: params.swap},
+              %Account{key: params.authority},
+              %Account{key: params.user_authority, signer?: true},
+              %Account{key: params.pool_mint, writable?: true},
+              %Account{key: params.user_pool, writable?: true},
+              %Account{key: params.swap_a, writable?: true},
+              %Account{key: params.swap_b, writable?: true},
+              %Account{key: params.user_a, writable?: true},
+              %Account{key: params.user_b, writable?: true},
+              %Account{key: params.fee_account, writable?: true},
+              %Account{key: Solana.SPL.Token.id()}
+            ]),
+          data:
+            Instruction.encode_data([
+              3,
+              {params.amount_pool, 64},
+              {params.amount_a, 64},
+              {params.amount_b, 64}
+            ])
         }
+
       error ->
         error
     end
@@ -529,7 +584,7 @@ defmodule Solana.SPL.TokenSwap do
       type: :pos_integer,
       required: true,
       doc: "Minimum amount of pool tokens to mint."
-    ],
+    ]
   ]
   @doc """
   Deposits `A` or `B` tokens into the pool.
@@ -543,19 +598,21 @@ defmodule Solana.SPL.TokenSwap do
       {:ok, params} ->
         %Instruction{
           program: id(),
-          accounts: List.flatten([
-            %Account{key: params.swap},
-            %Account{key: params.authority},
-            %Account{key: params.user_authority, signer?: true},
-            %Account{key: params.user_token, writable?: true},
-            %Account{key: params.swap_a, writable?: true},
-            %Account{key: params.swap_b, writable?: true},
-            %Account{key: params.swap_pool, writable?: true},
-            %Account{key: params.user_pool, writable?: true},
-            %Account{key: Solana.SPL.Token.id()},
-          ]),
+          accounts:
+            List.flatten([
+              %Account{key: params.swap},
+              %Account{key: params.authority},
+              %Account{key: params.user_authority, signer?: true},
+              %Account{key: params.user_token, writable?: true},
+              %Account{key: params.swap_a, writable?: true},
+              %Account{key: params.swap_b, writable?: true},
+              %Account{key: params.swap_pool, writable?: true},
+              %Account{key: params.user_pool, writable?: true},
+              %Account{key: Solana.SPL.Token.id()}
+            ]),
           data: Instruction.encode_data([4, {params.amount, 64}, {params.amount_pool, 64}])
         }
+
       error ->
         error
     end
@@ -616,7 +673,7 @@ defmodule Solana.SPL.TokenSwap do
       type: :pos_integer,
       required: true,
       doc: "Maximum amount of pool tokens to burn."
-    ],
+    ]
   ]
   @doc """
   Withdraws `A` or `B` tokens from the pool.
@@ -630,20 +687,22 @@ defmodule Solana.SPL.TokenSwap do
       {:ok, params} ->
         %Instruction{
           program: id(),
-          accounts: List.flatten([
-            %Account{key: params.swap},
-            %Account{key: params.authority},
-            %Account{key: params.user_authority, signer?: true},
-            %Account{key: params.pool_mint, writable?: true},
-            %Account{key: params.user_pool, writable?: true},
-            %Account{key: params.pool_a, writable?: true},
-            %Account{key: params.pool_b, writable?: true},
-            %Account{key: params.user_token, writable?: true},
-            %Account{key: params.fee_account, writable?: true},
-            %Account{key: Solana.SPL.Token.id()},
-          ]),
+          accounts:
+            List.flatten([
+              %Account{key: params.swap},
+              %Account{key: params.authority},
+              %Account{key: params.user_authority, signer?: true},
+              %Account{key: params.pool_mint, writable?: true},
+              %Account{key: params.user_pool, writable?: true},
+              %Account{key: params.pool_a, writable?: true},
+              %Account{key: params.pool_b, writable?: true},
+              %Account{key: params.user_token, writable?: true},
+              %Account{key: params.fee_account, writable?: true},
+              %Account{key: Solana.SPL.Token.id()}
+            ]),
           data: Instruction.encode_data([5, {params.amount, 64}, {params.amount_pool, 64}])
         }
+
       error ->
         error
     end
