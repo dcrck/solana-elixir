@@ -2,12 +2,13 @@ defmodule Solana.MixProject do
   use Mix.Project
 
   @source_url "https://git.sr.ht/~dcrck/solana"
+  @version "0.1.1"
 
   def project do
     [
       app: :solana,
       description: description(),
-      version: "0.1.0",
+      version: @version,
       elixir: "~> 1.12",
       package: package(),
       elixirc_paths: elixirc_paths(Mix.env()),
@@ -63,6 +64,7 @@ defmodule Solana.MixProject do
   defp docs do
     [
       main: "readme",
+      source_ref: "v#{@version}",
       source_url: @source_url,
       extras: ["README.md", "LICENSE"],
       groups_for_modules: [
@@ -81,19 +83,12 @@ defmodule Solana.MixProject do
           Solana.SystemProgram,
           Solana.SystemProgram.Nonce
         ],
-        SPL: [
-          Solana.SPL.AssociatedToken,
-          Solana.SPL.Token,
-          Solana.SPL.Token.Mint,
-          Solana.SPL.Token.MultiSig
-        ],
         Testing: [
           Solana.TestValidator
         ]
       ],
       nest_modules_by_prefix: [
         Solana.RPC,
-        Solana.SPL.Token,
         Solana.SystemProgram
       ]
     ]

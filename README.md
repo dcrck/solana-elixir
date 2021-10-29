@@ -76,29 +76,26 @@ when creating an API client.
 
 Since `solana`'s JSON-RPC API client supports `sendTransaction`, you can use it
 to interact with on-chain Solana programs. `solana` provides utilities to craft
-transactions, send them, and confirm them on-chain. It also includes modules
-that create transaction instructions for specific programs, namely:
+transactions, send them, and confirm them on-chain. It also includes the
+`Solana.SystemProgram` module, which allows you to create
+[SystemProgram](https://docs.solana.com/developing/runtime-facilities/programs#system-program)
+instructions.
 
-- `Solana.SystemProgram`: the
-  [SystemProgram](https://docs.solana.com/developing/runtime-facilities/programs#system-program)
-- `Solana.SPL.Token`: the Solana Program Library's [Token Program](https://spl.solana.com/token)
-- `Solana.SPL.AssociatedToken`: the Solana Program Library's [Associated Token
-  Account Program](https://spl.solana.com/associated-token-account)
-
-See the `test/solana` directory for examples of interacting with these programs.
+Also check out the `Solana.SPL` package
+[documentation](https://hexdocs.pm/solana_spl) to interact with the [Solana
+Program Library](https://spl.solana.com).
 
 ## Writing a custom program client
 
-Similarly to how `solana` implements interfaces for popular on-chain programs,
-it also provides guidelines for how to build interfaces to your own programs.
-Check out any of the modules listed above for examples of how to build an
-interface to your programs.
+By providing an interface for the `Solana.SystemProgram`, `solana` provides
+guidelines for how to build interfaces to your own programs. For more examples,
+see the `Solana.SPL` package.
 
 ### Testing custom programs
 
 Once you've built your custom program's client, you should probably write some
-tests for it. `solana` provides example tests for the interfaces listed above,
-along with an Elixir-managed [Solana Test
+tests for it. `solana` provides example tests for the `Solana.SystemProgram` in
+`test/solana/system_program_test.exs`, along with an Elixir-managed [Solana Test
 Validator](https://docs.solana.com/developing/test-validator) process to test
 your program locally. See `Solana.TestValidator` for more details about how to
 set this up.

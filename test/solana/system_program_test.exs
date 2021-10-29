@@ -194,6 +194,7 @@ defmodule Solana.SystemProgramTest do
     } do
       new = Solana.keypair()
       space = 0
+      new_program_id = B58.decode58!("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
 
       tx_reqs = [
         RPC.Request.get_minimum_balance_for_rent_exemption(space, commitment: "confirmed"),
@@ -213,7 +214,7 @@ defmodule Solana.SystemProgramTest do
           ),
           SystemProgram.assign(
             account: pubkey!(new),
-            program_id: Solana.SPL.Token.id()
+            program_id: new_program_id
           )
         ],
         signers: [payer, new],
@@ -233,7 +234,7 @@ defmodule Solana.SystemProgramTest do
           )
         )
 
-      assert pubkey!(account_info["owner"]) == Solana.SPL.Token.id()
+      assert pubkey!(account_info["owner"]) == new_program_id
     end
 
     test "can assign a new program ID to an account with a seed", %{
@@ -241,7 +242,8 @@ defmodule Solana.SystemProgramTest do
       client: client,
       payer: payer
     } do
-      {:ok, new} = Solana.Key.with_seed(pubkey!(payer), "assign", Solana.SPL.Token.id())
+      new_program_id = B58.decode58!("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
+      {:ok, new} = Solana.Key.with_seed(pubkey!(payer), "assign", new_program_id)
       space = 0
 
       tx_reqs = [
@@ -256,7 +258,7 @@ defmodule Solana.SystemProgramTest do
           SystemProgram.create_account(
             lamports: lamports,
             space: space,
-            program_id: Solana.SPL.Token.id(),
+            program_id: new_program_id,
             from: pubkey!(payer),
             new: new,
             base: pubkey!(payer),
@@ -264,7 +266,7 @@ defmodule Solana.SystemProgramTest do
           ),
           SystemProgram.assign(
             account: new,
-            program_id: Solana.SPL.Token.id(),
+            program_id: new_program_id,
             base: pubkey!(payer),
             seed: "assign"
           )
@@ -286,7 +288,7 @@ defmodule Solana.SystemProgramTest do
           )
         )
 
-      assert pubkey!(account_info["owner"]) == Solana.SPL.Token.id()
+      assert pubkey!(account_info["owner"]) == new_program_id
     end
   end
 
