@@ -81,7 +81,7 @@ transactions, send them, and confirm them on-chain. It also includes the
 [SystemProgram](https://docs.solana.com/developing/runtime-facilities/programs#system-program)
 instructions.
 
-Also check out the `Solana.SPL` package
+Also check out the `solana_spl` package
 [documentation](https://hexdocs.pm/solana_spl) to interact with the [Solana
 Program Library](https://spl.solana.com).
 
@@ -89,7 +89,7 @@ Program Library](https://spl.solana.com).
 
 By providing an interface for the `Solana.SystemProgram`, `solana` provides
 guidelines for how to build interfaces to your own programs. For more examples,
-see the `Solana.SPL` package.
+see the [`solana_spl` package](https://hexdocs.pm/solana_spl).
 
 ### Testing custom programs
 
