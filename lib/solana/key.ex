@@ -24,7 +24,10 @@ defmodule Solana.Key do
   """
   @spec decode(encoded :: binary) :: {:ok, t} | {:error, binary}
   def decode(encoded) when is_binary(encoded) do
-    encoded |> B58.decode58!() |> check()
+    case B58.decode58(encoded) do
+      {:ok, decoded} -> check(decoded)
+      _ -> {:error, "invalid public key"}
+    end
   end
 
   def decode(_), do: {:error, "invalid public key"}

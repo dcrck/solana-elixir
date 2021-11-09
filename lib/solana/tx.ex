@@ -34,6 +34,37 @@ defmodule Solana.Transaction do
   ]
 
   @doc """
+  decodes a base58-encoded signature and returns it in a tuple.
+
+  If it fails, return an error tuple.
+  """
+  @spec decode(encoded :: binary) :: {:ok, binary} | {:error, binary}
+  def decode(encoded) when is_binary(encoded) do
+    case B58.decode58(encoded) do
+      {:ok, decoded} -> check(decoded)
+      _ -> {:error, "invalid signature"}
+    end
+  end
+
+  def decode(_), do: {:error, "invalid signature"}
+
+  @doc """
+  decodes a base58-encoded signature and returns it.
+
+  Throws an `ArgumentError` if it fails.
+  """
+  @spec decode!(encoded :: binary) :: binary 
+  def decode!(encoded) when is_binary(encoded) do
+    case decode(encoded) do
+      {:ok, key} ->
+        key
+
+      {:error, _} ->
+        raise ArgumentError, "invalid signature input: #{encoded}"
+    end
+  end
+
+  @doc """
   Checks to see if a transaction's signature is valid.
 
   Returns `{:ok, signature}` if it is, and an error tuple if it isn't.

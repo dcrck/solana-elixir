@@ -16,19 +16,18 @@ defmodule Solana.KeyTest do
     end
 
     test "fails for keys which aren't base58-encoded" do
-      assert_raise ArgumentError, fn ->
-        Key.decode("0x300000000000000000000000000000000000000000000000000000000000000000000")
-      end
+      assert {:error, _} =
+               Key.decode(
+                 "0x300000000000000000000000000000000000000000000000000000000000000000000"
+               )
 
-      assert_raise ArgumentError, fn ->
-        Key.decode("0x300000000000000000000000000000000000000000000000000000000000000")
-      end
+      assert {:error, _} =
+               Key.decode("0x300000000000000000000000000000000000000000000000000000000000000")
 
-      assert_raise ArgumentError, fn ->
-        Key.decode(
-          "135693854574979916511997248057056142015550763280047535983739356259273198796800000"
-        )
-      end
+      assert {:error, _} =
+               Key.decode(
+                 "135693854574979916511997248057056142015550763280047535983739356259273198796800000"
+               )
     end
 
     test "works for the default key" do
@@ -37,6 +36,28 @@ defmodule Solana.KeyTest do
 
     test "works for regular keys" do
       assert {:ok, <<3, 0::31*8>>} = Key.decode("CiDwVBFgWV9E5MvXWoLgnEgn2hK7rJikbvfWavzAQz3")
+    end
+  end
+
+  describe "decode!/1" do
+    test "throws for keys which aren't base58-encoded" do
+      assert_raise ArgumentError, fn ->
+        Key.decode!("0x300000000000000000000000000000000000000000000000000000000000000000000")
+      end
+
+      assert_raise ArgumentError, fn ->
+        Key.decode!("0x300000000000000000000000000000000000000000000000000000000000000")
+      end
+
+      assert_raise ArgumentError, fn ->
+        Key.decode!(
+          "135693854574979916511997248057056142015550763280047535983739356259273198796800000"
+        )
+      end
+    end
+
+    test "works for the default key" do
+      assert <<0::32*8>> == Key.decode!("11111111111111111111111111111111")
     end
   end
 
