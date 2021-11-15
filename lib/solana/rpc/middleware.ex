@@ -70,6 +70,15 @@ defmodule Solana.RPC.Middleware do
     {:ok, Map.put(result, "transaction", tx)}
   end
 
+  defp decode_result({"getAccountInfo", %{} = result}) do
+    {:ok, Map.update!(result, "owner", &B58.decode58!/1)}
+  end
+
+  # just run the decoding for getAccountInfo for each item in the list
+  defp decode_result({"getMultipleAccounts", result}) when is_list(result) do
+    {:ok, Enum.map(result, &elem(decode_result({"getAccountInfo", &1}), 1))}
+  end
+
   defp decode_result({_method, result}), do: {:ok, result}
 
   defp decode_b58_list(list), do: Enum.map(list, &B58.decode58!/1)

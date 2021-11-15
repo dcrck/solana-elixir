@@ -159,7 +159,7 @@ defmodule Solana.RPC.Request do
   docs](https://docs.solana.com/developing/clients/jsonrpc-api#getsignaturestatuses).
   """
   @spec get_signature_statuses(signatures :: [Solana.key()], opts :: keyword) :: t
-  def get_signature_statuses(signatures, opts \\ []) do
+  def get_signature_statuses(signatures, opts \\ []) when is_list(signatures) do
     {"getSignatureStatuses", [Enum.map(signatures, &B58.encode58/1), encode_opts(opts)]}
   end
 
@@ -194,6 +194,18 @@ defmodule Solana.RPC.Request do
   @spec get_token_largest_accounts(mint :: Solana.key(), opts :: keyword) :: t
   def get_token_largest_accounts(mint, opts \\ []) do
     {"getTokenLargestAccounts", [B58.encode58(mint), encode_opts(opts)]}
+  end
+
+  @doc """
+  Returns the account information for a list of pubkeys.
+
+  For more information, see [the Solana
+  docs](https://docs.solana.com/developing/clients/jsonrpc-api#getmultipleaccounts).
+  """
+  @spec get_multiple_accounts(accounts :: [Solana.key()], opts :: keyword) :: t
+  def get_multiple_accounts(accounts, opts \\ []) when is_list(accounts) do
+    {"getMultipleAccounts",
+     [Enum.map(accounts, &B58.encode58/1), encode_opts(opts, %{"encoding" => "base64"})]}
   end
 
   defp encode_opts(opts, defaults \\ %{}) do
