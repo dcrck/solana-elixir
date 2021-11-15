@@ -60,5 +60,17 @@ defmodule Solana.RPC.Middleware do
     {:ok, B58.decode58!(signature)}
   end
 
+  defp decode_result({"getTransaction", %{"transaction" => tx} = result}) do
+    tx =
+      tx
+      |> update_in(["message", "accountKeys"], &decode_b58_list/1)
+      |> update_in(["message", "recentBlockhash"], &B58.decode58!/1)
+      |> Map.update!("signatures", &decode_b58_list/1)
+
+    {:ok, Map.put(result, "transaction", tx)}
+  end
+
   defp decode_result({_method, result}), do: {:ok, result}
+
+  defp decode_b58_list(list), do: Enum.map(list, &B58.decode58!/1)
 end
