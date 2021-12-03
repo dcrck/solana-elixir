@@ -194,7 +194,7 @@ defmodule Solana.SystemProgramTest do
     } do
       new = Solana.keypair()
       space = 0
-      new_program_id = B58.decode58!("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
+      new_program_id = pubkey!("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
 
       tx_reqs = [
         RPC.Request.get_minimum_balance_for_rent_exemption(space, commitment: "confirmed"),
@@ -234,7 +234,7 @@ defmodule Solana.SystemProgramTest do
           )
         )
 
-      assert pubkey!(account_info["owner"]) == new_program_id
+      assert account_info["owner"] == new_program_id
     end
 
     test "can assign a new program ID to an account with a seed", %{
@@ -242,7 +242,7 @@ defmodule Solana.SystemProgramTest do
       client: client,
       payer: payer
     } do
-      new_program_id = B58.decode58!("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
+      new_program_id = pubkey!("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA")
       {:ok, new} = Solana.Key.with_seed(pubkey!(payer), "assign", new_program_id)
       space = 0
 
@@ -288,7 +288,7 @@ defmodule Solana.SystemProgramTest do
           )
         )
 
-      assert pubkey!(account_info["owner"]) == new_program_id
+      assert account_info["owner"] == new_program_id
     end
   end
 
