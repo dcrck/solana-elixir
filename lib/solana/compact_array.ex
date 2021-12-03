@@ -23,33 +23,35 @@ defmodule Solana.CompactArray do
 
   defp encode_bits(bits), do: band(bits, 0x7F)
 
-  @spec decode_and_split(encoded :: binary) :: {binary, non_neg_integer}
+  @spec decode_and_split(encoded :: binary) :: {binary, non_neg_integer} | :error
+  def decode_and_split(""), do: :error
+
   def decode_and_split(encoded) do
     count = decode_length(encoded)
     count_size = compact_length_bytes(count)
 
-    <<
-      length::count_size*8,
-      rest::binary
-    >> = encoded
-
-    {rest, length}
+    case encoded do
+      <<length::count_size*8, rest::binary>> -> {rest, length}
+      _ -> :error
+    end
   end
 
   @spec decode_and_split(encoded :: binary, item_size :: non_neg_integer) ::
-          {[binary], binary, non_neg_integer}
+          {[binary], binary, non_neg_integer} | :error
+  def decode_and_split("", _), do: :error
+
   def decode_and_split(encoded, item_size) do
     count = decode_length(encoded)
     count_size = compact_length_bytes(count)
     data_size = count * item_size
 
-    <<
-      length::count_size*8,
-      data::binary-size(data_size),
-      rest::binary
-    >> = encoded
+    case encoded do
+      <<length::count_size*8, data::binary-size(data_size), rest::binary>> ->
+        {Solana.Helpers.chunk(data, item_size), rest, length}
 
-    {Solana.Helpers.chunk(data, item_size), rest, length}
+      _ ->
+        :error
+    end
   end
 
   def decode_length(bytes), do: decode_length(bytes, 0)

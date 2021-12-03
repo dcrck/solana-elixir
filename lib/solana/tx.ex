@@ -53,7 +53,7 @@ defmodule Solana.Transaction do
 
   Throws an `ArgumentError` if it fails.
   """
-  @spec decode!(encoded :: binary) :: binary 
+  @spec decode!(encoded :: binary) :: binary
   def decode!(encoded) when is_binary(encoded) do
     case decode(encoded) do
       {:ok, key} ->
@@ -197,4 +197,101 @@ defmodule Solana.Transaction do
   end
 
   defp sign({secret, pk}, message), do: Ed25519.signature(message, secret, pk)
+
+  @doc """
+  Parses a `t:Solana.Transaction.t/0` from data encoded in Solana's [binary
+  format](https://docs.solana.com/developing/programming-model/transactions#anatomy-of-a-transaction)
+
+  Returns `{transaction, extras}` if the transaction was successfully
+  parsed, or `:error` if the provided binary could not be parsed. `extras`
+  is a keyword list containing information about the encoded transaction,
+  namely:
+
+  - `:header` - the [transaction message
+  header](https://docs.solana.com/developing/programming-model/transactions#message-header-format)
+  - `:accounts` - an [ordered array of
+  accounts](https://docs.solana.com/developing/programming-model/transactions#account-addresses-format)
+  - `:signatures` - a [list of signed copies of the transaction
+  message](https://docs.solana.com/developing/programming-model/transactions#signatures)
+  """
+  @spec parse(encoded :: binary) :: {t(), keyword} | :error
+  def parse(encoded) do
+    with {signatures, message, _} <- CompactArray.decode_and_split(encoded, 64),
+         <<header::binary-size(3), contents::binary>> <- message,
+         {account_keys, hash_and_ixs, key_count} <- CompactArray.decode_and_split(contents, 32),
+         <<blockhash::binary-size(32), ix_data::binary>> <- hash_and_ixs,
+         {:ok, instructions} <- extract_instructions(ix_data) do
+      tx_accounts = derive_accounts(account_keys, key_count, header)
+      indices = Enum.into(Enum.with_index(tx_accounts, &{&2, &1}), %{})
+
+      {
+        %__MODULE__{
+          payer: tx_accounts |> List.first() |> Map.get(:key),
+          blockhash: blockhash,
+          instructions:
+            Enum.map(instructions, fn {program, accounts, data} ->
+              %Instruction{
+                data: if(data == "", do: nil, else: :binary.list_to_bin(data)),
+                program: Map.get(indices, program) |> Map.get(:key),
+                accounts: Enum.map(accounts, &Map.get(indices, &1))
+              }
+            end)
+        },
+        [
+          accounts: tx_accounts,
+          header: header,
+          signatures: signatures
+        ]
+      }
+    else
+      _ -> :error
+    end
+  end
+
+  defp extract_instructions(data) do
+    with {ix_data, ix_count} <- CompactArray.decode_and_split(data),
+         {reversed_ixs, ""} <- extract_instructions(ix_data, ix_count) do
+      {:ok, Enum.reverse(reversed_ixs)}
+    else
+      error -> error
+    end
+  end
+
+  defp extract_instructions(data, count) do
+    Enum.reduce_while(1..count, {[], data}, fn _, {acc, raw} ->
+      case extract_instruction(raw) do
+        {ix, rest} -> {:cont, {[ix | acc], rest}}
+        _ -> {:halt, :error}
+      end
+    end)
+  end
+
+  defp extract_instruction(raw) do
+    with <<program::8, rest::binary>> <- raw,
+         {accounts, rest, _} <- CompactArray.decode_and_split(rest, 1),
+         {data, rest, _} <- extract_instruction_data(rest) do
+      {{program, Enum.map(accounts, &:binary.decode_unsigned/1), data}, rest}
+    else
+      _ -> :error
+    end
+  end
+
+  defp extract_instruction_data(""), do: {"", "", 0}
+  defp extract_instruction_data(raw), do: CompactArray.decode_and_split(raw, 1)
+
+  defp derive_accounts(keys, total, header) do
+    <<signers_count::8, signers_readonly_count::8, nonsigners_readonly_count::8>> = header
+    {signers, nonsigners} = Enum.split(keys, signers_count)
+    {signers_write, signers_read} = Enum.split(signers, signers_count - signers_readonly_count)
+
+    {nonsigners_write, nonsigners_read} =
+      Enum.split(nonsigners, total - signers_count - nonsigners_readonly_count)
+
+    List.flatten([
+      Enum.map(signers_write, &%Account{key: &1, writable?: true, signer?: true}),
+      Enum.map(signers_read, &%Account{key: &1, signer?: true}),
+      Enum.map(nonsigners_write, &%Account{key: &1, writable?: true}),
+      Enum.map(nonsigners_read, &%Account{key: &1})
+    ])
+  end
 end
