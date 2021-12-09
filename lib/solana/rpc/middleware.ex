@@ -60,7 +60,7 @@ defmodule Solana.RPC.Middleware do
     {:ok, B58.decode58!(signature)}
   end
 
-  defp decode_result({"getTransaction", %{"transaction" => tx} = result}) do
+  defp decode_result({"getTransaction", %{"transaction" => tx} = result}) when is_map(tx) do
     tx =
       tx
       |> update_in(["message", "accountKeys"], &decode_b58_list/1)
