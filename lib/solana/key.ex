@@ -18,6 +18,24 @@ defmodule Solana.Key do
   defdelegate pair, to: Ed25519, as: :generate_key_pair
 
   @doc """
+  Reads a public/private key pair from a [file system
+  wallet](https://docs.solana.com/wallet-guide/file-system-wallet) in the format
+  `{private_key, public_key}`. Returns `{:ok, pair}` if successful, or `{:error,
+  reason}` if not.
+  """
+  @spec pair_from_file(String.t()) :: {:ok, pair} | {:error, term}
+  def pair_from_file(path) do
+    with {:ok, contents} <- File.read(path),
+         {:ok, list} when is_list(list) <- Jason.decode(contents),
+         <<sk::binary-size(32), pk::binary-size(32)>> <- :erlang.list_to_binary(list) do
+      {:ok, {sk, pk}}
+    else
+      {:error, _} = error -> error
+      _contents -> {:error, "invalid wallet format"}
+    end
+  end
+
+  @doc """
   decodes a base58-encoded key and returns it in a tuple.
 
   If it fails, return an error tuple.
