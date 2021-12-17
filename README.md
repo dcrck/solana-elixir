@@ -14,7 +14,7 @@ Add `solana` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:solana, "~> 0.1.0"}
+    {:solana, "~> 0.2.0"}
   ]
 end
 ```
