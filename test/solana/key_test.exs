@@ -117,4 +117,22 @@ defmodule Solana.KeyTest do
       assert {:ok, ^address} = Key.derive_address(["", nonce], program_id)
     end
   end
+
+  describe "pair_from_file/1" do
+    test "loads a keypair from a valid file system wallet" do
+      pk = Solana.pubkey!("ntnHWe6sXd1SZaLa5gqHndAsyRwEfoR21ggNxkuyBtK")
+      assert {:ok, {_sk, ^pk}} = Key.pair_from_file("test/support/wallet.json")
+    end
+
+    test "does not load a keypair from a non-existant files" do
+      assert {:error, _} = Key.pair_from_file("test/support/nonexistant.json")
+    end
+
+    test "does not load a keypair from invalid files" do
+      ["invalid1", "invalid2"]
+      |> Enum.each(fn name ->
+        assert {:error, "invalid wallet format"} = Key.pair_from_file("test/support/#{name}.json")
+      end)
+    end
+  end
 end
