@@ -30,6 +30,12 @@ defmodule Solana.Instruction do
     <<byte_size(value)::little-size(32), 0::32, value::binary>>
   end
 
+  # encodes a string in Borsh's expected format
+  # https://borsh.io/#pills-specification
+  defp encode_value({value, "borsh"}) when is_binary(value) do
+    <<byte_size(value)::little-size(32), value::binary>>
+  end
+
   defp encode_value({value, size}), do: encode_value({value, size, :little})
   defp encode_value({value, size, :big}), do: <<value::size(size)-big>>
   defp encode_value({value, size, :little}), do: <<value::size(size)-little>>
