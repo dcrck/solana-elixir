@@ -53,6 +53,12 @@ defmodule Solana do
   """
   def recent_blockhashes(), do: pubkey!("SysvarRecentB1ockHashes11111111111111111111")
 
+  @doc """
+  The public key for the [BPF Loader
+  program](https://docs.solana.com/developing/runtime-facilities/programs#bpf-loader)
+  """
+  def bpf_loader(), do: pubkey!("BPFLoaderUpgradeab1e11111111111111111111111")
+
   @doc false
   def lamports_per_sol(), do: 1_000_000_000
 end
