@@ -41,4 +41,7 @@ defmodule Solana.Instruction do
   defp encode_value({value, size, :little}), do: <<value::size(size)-little>>
   defp encode_value(value) when is_binary(value), do: value
   defp encode_value(value) when is_integer(value), do: <<value>>
+  defp encode_value(value) when is_boolean(value), do: <<unary(value)>>
+
+  defp unary(val), do: if(val, do: 1, else: 0)
 end
