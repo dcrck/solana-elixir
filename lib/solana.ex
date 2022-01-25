@@ -54,6 +54,12 @@ defmodule Solana do
   def recent_blockhashes(), do: pubkey!("SysvarRecentB1ockHashes11111111111111111111")
 
   @doc """
+  The public key for the [Clock system
+  variable](https://docs.solana.com/developing/runtime-facilities/sysvars#clock)
+  """
+  def clock(), do: pubkey!("SysvarC1ock11111111111111111111111111111111")
+
+  @doc """
   The public key for the [BPF Loader
   program](https://docs.solana.com/developing/runtime-facilities/programs#bpf-loader)
   """
