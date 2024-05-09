@@ -80,6 +80,18 @@ defmodule Solana.RPC.Request do
   end
 
   @doc """
+  Get the fee the network will charge for a transaction
+
+  For more information, see [the Solana
+  docs](https://solana.com/docs/rpc/http/getfeeformessage).
+  """
+  @spec get_fee_for_message(transaction :: Solana.Transaction.t(), opts :: keyword) :: t
+  def get_fee_for_message(tx = %Solana.Transaction{}, opts \\ []) do
+    {:ok, message_bin} = Solana.Transaction.to_binary_message(tx)
+    {"getFeeForMessage", [Base.encode64(message_bin), encode_opts(opts)]}
+  end
+
+  @doc """
   Returns a recent block hash from the ledger, and a fee schedule that can be
   used to compute the cost of submitting a transaction using it.
 

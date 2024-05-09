@@ -114,6 +114,23 @@ defmodule Solana.Transaction do
     end
   end
 
+  def to_binary_message(tx = %__MODULE__{instructions: ixs}) do
+    with {:ok, ixs} <- check_instructions(List.flatten(ixs)),
+         accounts = compile_accounts(ixs, tx.payer) do
+      message = encode_message(accounts, tx.blockhash, ixs)
+
+      {:ok, :erlang.list_to_binary([message])}
+    else
+      {:error, :no_program, idx} ->
+        Logger.error("Missing program id on instruction at index #{idx}")
+        {:error, :no_program}
+
+      {:error, message, idx} ->
+        Logger.error("error compiling instruction at index #{idx}: #{inspect(message)}")
+        {:error, message}
+    end
+  end
+
   defp check_instructions(ixs) do
     ixs
     |> Enum.with_index()

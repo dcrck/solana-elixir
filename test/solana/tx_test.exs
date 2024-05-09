@@ -207,6 +207,51 @@ defmodule Solana.TransactionTest do
     end
   end
 
+  describe "to_binary_message/1" do
+    test "succeeds" do
+      payer = Solana.keypair()
+      read_only = Solana.keypair()
+      program = Solana.keypair() |> pubkey!()
+      blockhash = Solana.keypair() |> pubkey!()
+
+      ix = %Instruction{
+        program: program,
+        accounts: [%Account{key: pubkey!(payer)}, %Account{key: pubkey!(read_only)}]
+      }
+
+      tx = %Transaction{
+        payer: pubkey!(payer),
+        instructions: [ix],
+        blockhash: blockhash
+      }
+
+      {:ok, message_bin} = Transaction.to_binary_message(tx)
+
+      blockhash_set = MapSet.new(:erlang.binary_to_list(blockhash))
+      message_set = MapSet.new(:erlang.binary_to_list(message_bin))
+
+      assert MapSet.subset?(blockhash_set, message_set) == true
+    end
+
+    test "fail because program does not exist" do
+      payer = Solana.keypair()
+      read_only = Solana.keypair()
+      blockhash = Solana.keypair() |> pubkey!()
+
+      ix = %Instruction{
+        accounts: [%Account{key: pubkey!(payer)}, %Account{key: pubkey!(read_only)}]
+      }
+
+      tx = %Transaction{
+        payer: pubkey!(payer),
+        instructions: [ix],
+        blockhash: blockhash
+      }
+
+      assert {:error, :no_program} = Transaction.to_binary_message(tx)
+    end
+  end
+
   describe "parse/1" do
     test "cannot parse an empty string" do
       assert :error = Transaction.parse("")
