@@ -1,6 +1,6 @@
 defmodule Solana.CompactArray do
   @moduledoc false
-  use Bitwise, skip_operators: true
+  import Bitwise, except: ["~~~": 1, &&&: 2, |||: 2, "^^^": 2, <<<: 2, >>>: 2]
 
   # https://docs.solana.com/developing/programming-model/transactions#compact-array-format
   @spec to_iolist(arr :: iolist | nil) :: iolist

@@ -133,7 +133,7 @@ defmodule Solana.Key do
   def find_address(seeds, program_id) do
     case check(program_id) do
       {:ok, program_id} ->
-        Enum.reduce_while(255..1, {:error, :no_nonce}, fn nonce, acc ->
+        Enum.reduce_while(255..1//-1, {:error, :no_nonce}, fn nonce, acc ->
           case derive_address(List.flatten([seeds, nonce]), program_id) do
             {:ok, address} -> {:halt, {:ok, address, nonce}}
             _err -> {:cont, acc}
