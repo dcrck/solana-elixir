@@ -83,7 +83,7 @@ defmodule Solana.RPC.Request do
   Returns the latest blockhash.
 
   For more information, see [the Solana
-  docs](https://solana.com/hi/docs/rpc/http/getlatestblockhash).
+  docs](https://solana.com/docs/rpc/http/getlatestblockhash).
   """
   @spec get_latest_blockhash(opts :: keyword) :: t
   def get_latest_blockhash(opts \\ []) do
@@ -97,7 +97,7 @@ defmodule Solana.RPC.Request do
   For more information, see [the Solana
   docs](https://docs.solana.com/developing/clients/jsonrpc-api#getrecentblockhash).
   """
-  @deprecated "Use Solana.RPC.Request.get_latest_blockhash/2 instead"
+  @deprecated "Use Solana.RPC.Request.get_latest_blockhash/1 instead"
   @spec get_recent_blockhash(opts :: keyword) :: t
   def get_recent_blockhash(opts \\ []) do
     {"getRecentBlockhash", [encode_opts(opts)]}
