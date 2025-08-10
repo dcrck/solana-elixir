@@ -21,7 +21,7 @@ defmodule Solana.SystemProgram.NonceTest do
 
       tx_reqs = [
         RPC.Request.get_minimum_balance_for_rent_exemption(space, commitment: "confirmed"),
-        RPC.Request.get_recent_blockhash(commitment: "confirmed")
+        RPC.Request.get_latest_blockhash(commitment: "confirmed")
       ]
 
       [{:ok, lamports}, {:ok, %{"blockhash" => blockhash}}] = RPC.send(client, tx_reqs)
@@ -70,7 +70,7 @@ defmodule Solana.SystemProgram.NonceTest do
 
       tx_reqs = [
         RPC.Request.get_minimum_balance_for_rent_exemption(space, commitment: "confirmed"),
-        RPC.Request.get_recent_blockhash(commitment: "confirmed")
+        RPC.Request.get_latest_blockhash(commitment: "confirmed")
       ]
 
       [{:ok, lamports}, {:ok, %{"blockhash" => blockhash}}] = RPC.send(client, tx_reqs)
@@ -124,7 +124,7 @@ defmodule Solana.SystemProgram.NonceTest do
 
       tx_reqs = [
         RPC.Request.get_minimum_balance_for_rent_exemption(space, commitment: "confirmed"),
-        RPC.Request.get_recent_blockhash(commitment: "confirmed")
+        RPC.Request.get_latest_blockhash(commitment: "confirmed")
       ]
 
       [{:ok, lamports}, {:ok, %{"blockhash" => blockhash}}] = RPC.send(client, tx_reqs)
@@ -199,7 +199,7 @@ defmodule Solana.SystemProgram.NonceTest do
       space = SystemProgram.Nonce.byte_size()
 
       tx_reqs = [
-        RPC.Request.get_recent_blockhash(commitment: "confirmed")
+        RPC.Request.get_latest_blockhash(commitment: "confirmed")
       ]
 
       [{:ok, %{"blockhash" => blockhash}}] = RPC.send(client, tx_reqs)
