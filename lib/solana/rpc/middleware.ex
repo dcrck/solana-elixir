@@ -52,6 +52,10 @@ defmodule Solana.RPC.Middleware do
     {:ok, responses}
   end
 
+  defp decode_result({"getLatestBlockhash", blockhash_result}) do
+    {:ok, update_in(blockhash_result, ["blockhash"], &B58.decode58!/1)}
+  end
+
   defp decode_result({"getRecentBlockhash", blockhash_result}) do
     {:ok, update_in(blockhash_result, ["blockhash"], &B58.decode58!/1)}
   end
