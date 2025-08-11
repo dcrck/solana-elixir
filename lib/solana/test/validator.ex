@@ -79,7 +79,7 @@ defmodule Solana.TestValidator do
     bpf_program: [type: {:or, [:string, {:list, :string}]}],
     clone: [type: {:custom, Solana, :pubkey, []}],
     config: [type: :string, default: Path.expand("~/.config/solana/cli/config.yml")],
-    dynamic_port_range: [type: :string, default: "1024-65535"],
+    dynamic_port_range: [type: :string, default: "8000-10000"],
     faucet_port: [type: :pos_integer, default: 9900],
     faucet_sol: [type: :pos_integer, default: 1_000_000],
     gossip_host: [type: :string, default: "127.0.0.1"],
