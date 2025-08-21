@@ -78,25 +78,35 @@ defmodule Solana.Transaction do
   Encodes a `t:Solana.Transaction.t/0` into a [binary
   format](https://docs.solana.com/developing/programming-model/transactions#anatomy-of-a-transaction)
 
+  Options:
+  - `:require_all_signatures?` (default: `true`) — when `false`, allows
+    serialization without providing all required signer keypairs; any missing
+    signatures will be encoded as 64 zero bytes in the signatures array. This
+    mirrors the JavaScript solana/web3.js `serialize({ requireAllSignatures })`
+    behavior.
+
   Returns `{:ok, encoded_transaction}` if the transaction was successfully
   encoded, or an error tuple if the encoding failed -- plus more error details
   via `Logger.error/1`.
   """
-  @spec to_binary(tx :: t) :: {:ok, binary()} | {:error, encoding_err()}
-  def to_binary(%__MODULE__{payer: nil}), do: {:error, :no_payer}
-  def to_binary(%__MODULE__{blockhash: nil}), do: {:error, :no_blockhash}
-  def to_binary(%__MODULE__{instructions: []}), do: {:error, :no_instructions}
+  @spec to_binary(tx :: t, opts :: keyword) :: {:ok, binary()} | {:error, encoding_err()}
+  def to_binary(tx, opts \\ [])
+  def to_binary(%__MODULE__{payer: nil}, _opts), do: {:error, :no_payer}
+  def to_binary(%__MODULE__{blockhash: nil}, _opts), do: {:error, :no_blockhash}
+  def to_binary(%__MODULE__{instructions: []}, _opts), do: {:error, :no_instructions}
 
-  def to_binary(tx = %__MODULE__{instructions: ixs, signers: signers}) do
+  def to_binary(tx = %__MODULE__{instructions: ixs, signers: signers}, opts) do
     with {:ok, ixs} <- check_instructions(List.flatten(ixs)),
          accounts = compile_accounts(ixs, tx.payer),
-         true <- signers_match?(accounts, signers) do
+         true <-
+           signers_match?(accounts, signers, Keyword.get(opts, :require_all_signatures?, true)) do
       message = encode_message(accounts, tx.blockhash, ixs)
 
       signatures =
-        signers
-        |> reorder_signers(accounts)
-        |> Enum.map(&sign(&1, message))
+        accounts
+        |> Enum.filter(& &1.signer?)
+        |> Enum.map(& &1.key)
+        |> build_signatures(signers, message)
         |> CompactArray.to_iolist()
 
       {:ok, :erlang.list_to_binary([signatures, message])}
@@ -137,7 +147,7 @@ defmodule Solana.Transaction do
 
   defp cons(list, item), do: [item | list]
 
-  defp signers_match?(accounts, signers) do
+  defp signers_match?(accounts, signers, true = _require_all_signatures) do
     expected = MapSet.new(Enum.map(signers, &elem(&1, 1)))
 
     accounts
@@ -145,6 +155,10 @@ defmodule Solana.Transaction do
     |> Enum.map(& &1.key)
     |> MapSet.new()
     |> MapSet.equal?(expected)
+  end
+
+  defp signers_match?(_accounts, _signers, _require_all_signatures?) do
+    true
   end
 
   # https://docs.solana.com/developing/programming-model/transactions#message-format
@@ -187,16 +201,26 @@ defmodule Solana.Transaction do
     end)
   end
 
-  defp reorder_signers(signers, accounts) do
-    account_idxs = index_accounts(accounts)
-    Enum.sort_by(signers, &Map.get(account_idxs, elem(&1, 1)))
-  end
-
   defp index_accounts(accounts) do
     Enum.into(Enum.with_index(accounts, &{&1.key, &2}), %{})
   end
 
   defp sign({secret, pk}, message), do: Ed25519.signature(message, secret, pk)
+
+  defp build_signatures(required_signer_pks, provided_signers, message) do
+    signer_map = Map.new(provided_signers, fn {sk, pk} -> {pk, {sk, pk}} end)
+
+    Enum.map(required_signer_pks, fn pk ->
+      case Map.get(signer_map, pk) do
+        nil ->
+          # If not all signers are required, emit a zeroed signature for those not provided
+          <<0::size(512)>>
+
+        kp ->
+          sign(kp, message)
+      end
+    end)
+  end
 
   @doc """
   Parses a `t:Solana.Transaction.t/0` from data encoded in Solana's [binary
