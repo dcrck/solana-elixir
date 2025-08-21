@@ -6,7 +6,7 @@ defmodule Solana.TransactionTest do
 
   alias Solana.{Transaction, Instruction, Account}
 
-  describe "to_binary/1" do
+  describe "to_binary/2" do
     test "fails if there's no blockhash" do
       payer = Solana.keypair()
       program = Solana.keypair() |> pubkey!()
@@ -82,6 +82,25 @@ defmodule Solana.TransactionTest do
 
       assert Transaction.to_binary(%{tx | signers: [payer, signer]}) ==
                {:error, :mismatched_signers}
+    end
+
+    test "adds zeroed signatures in place of those not provided if set require_all_signatures? to false" do
+      blockhash = Solana.keypair() |> pubkey!()
+      program = Solana.keypair() |> pubkey!()
+      payer = Solana.keypair()
+
+      ix = %Instruction{
+        program: program,
+        accounts: [
+          %Account{key: pubkey!(payer), writable?: true, signer?: true}
+        ]
+      }
+
+      tx = %Transaction{payer: pubkey!(payer), instructions: [ix], blockhash: blockhash}
+      {:ok, tx_bin} = Transaction.to_binary(tx, require_all_signatures?: false)
+      {_, extras} = Transaction.parse(tx_bin)
+
+      assert [<<0::512>>] == Keyword.fetch!(extras, :signatures)
     end
 
     test "places accounts in order (payer first)" do
